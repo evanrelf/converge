@@ -5,6 +5,7 @@ let
     packageOverrides = pkgs: rec {
       haskellPackages = pkgs.haskellPackages.override {
         overrides = new: old: rec {
+          relude = new.callPackage ./nix/relude.nix {};
           converge = new.callCabal2nix "converge" src {};
         };
       };

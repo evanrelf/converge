@@ -16,7 +16,7 @@ build-type:  Simple
 common common
   build-depends:
     , base ^>= 4.12.0.0
-    , relude ^>= 0.5.0
+    , relude ^>= 0.6.0.0
   mixins:
     , base hiding (Prelude)
     , relude (Relude as Prelude)
