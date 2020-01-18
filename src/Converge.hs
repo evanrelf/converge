@@ -10,7 +10,7 @@ module Converge (main) where
 
 import qualified GitHub.Data as GitHub
 import qualified Network.Wai.Handler.Warp as Warp
-import Servant ((:>), Context((:.)))
+import Servant ((:<|>)(..), (:>), Context((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as W
 
@@ -19,6 +19,12 @@ type Api =
     :> Servant.Summary "Ping"
     :> W.GitHubEvent '[ 'GitHub.WebhookPingEvent ]
     :> W.GitHubSignedReqBody '[Servant.JSON] GitHub.PingEvent
+    :> Servant.Post '[Servant.JSON] ()
+  :<|>
+  "webhook"
+    :> Servant.Summary "Pull request"
+    :> W.GitHubEvent '[ 'GitHub.WebhookPullRequestEvent ]
+    :> W.GitHubSignedReqBody '[Servant.JSON] GitHub.PullRequestEvent
     :> Servant.Post '[Servant.JSON] ()
 
 onPing
@@ -29,8 +35,17 @@ onPing GitHub.WebhookPingEvent (_, event) =
   putTextLn ("PingEvent: " <> show event)
 onPing _ _ = pass
 
+onPullRequest
+  :: W.RepoWebhookEvent
+  -> ((), GitHub.PullRequestEvent)
+  -> Servant.Handler ()
+onPullRequest GitHub.WebhookPullRequestEvent (_, event) =
+  putTextLn ("PullRequstEvent: " <> show event)
+onPullRequest _ _ = pass
+
 server :: Servant.Server Api
 server = onPing
+    :<|> onPullRequest
 
 main :: IO ()
 main = do
