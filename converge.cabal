@@ -46,7 +46,11 @@ library
     Converge
   -- other-modules:
 
-  -- build-depends:
+  build-depends:
+    , github
+    , servant-github-webhook
+    , servant-server
+    , warp
 
 
 executable converge
