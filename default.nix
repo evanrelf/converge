@@ -10,6 +10,7 @@ let
 
   haskellPackages = pkgs.haskellPackages.override {
     overrides = new: old: {
+      fused-effects = onlyBuild (new.callPackage ./nix/fused-effects.nix {});
       relude = onlyBuild (new.callPackage ./nix/relude.nix {});
     };
   };
