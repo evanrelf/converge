@@ -50,7 +50,6 @@ library
     , github
     , servant-github-webhook
     , servant-server
-    , warp
 
 
 executable converge
@@ -61,6 +60,8 @@ executable converge
 
   build-depends:
     , converge
+    , servant-server
+    , warp
 
   ghc-options:
     -threaded
