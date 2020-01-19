@@ -55,7 +55,9 @@ let
     ];
   });
 in
-  { converge = pkgs.haskellPackages.converge;
+  rec {
+    converge = pkgs.haskellPackages.converge;
+    convergeBin = pkgs.haskell.lib.justStaticExecutables converge;
     inherit dockerImage;
     inherit shell;
   }
