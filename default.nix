@@ -1,18 +1,24 @@
 let
-  src = pkgs.nix-gitignore.gitignoreSource [ ".git/" ] ./.;
+  pkgs = import ./nix/nixpkgs.nix { config = {}; };
 
-  config = {
-    packageOverrides = pkgs: rec {
-      haskellPackages = pkgs.haskellPackages.override {
-        overrides = new: old: rec {
-          relude = new.callPackage ./nix/relude.nix {};
-          converge = new.callCabal2nix "converge" src {};
-        };
-      };
+  onlyBuild = drv: pkgs.haskell.lib.overrideCabal drv (drv: {
+    doBenchmark = false;
+    doCheck = false;
+    doCoverage = false;
+    doHaddock = false;
+  });
+
+  haskellPackages = pkgs.haskellPackages.override {
+    overrides = new: old: {
+      relude = onlyBuild (new.callPackage ./nix/relude.nix {});
     };
   };
 
-  pkgs = import ./nix/nixpkgs.nix { inherit config; };
+  converge =
+    let
+      src = pkgs.nix-gitignore.gitignoreSource [ ".git/" ] ./.;
+    in
+      haskellPackages.callCabal2nix "converge" src {};
 
   dockerImage =
     # TODO:
@@ -29,7 +35,7 @@ let
         name = "converge";
         tag = "latest";
         contents =
-          linuxPkgs.haskell.lib.justStaticExecutables (linuxPkgs.haskellPackages.callCabal2nix "converge" src {});
+          linuxPkgs.haskell.lib.justStaticExecutables converge;
         config = {
           Cmd = "/bin/converge";
           ExposedPorts = {
@@ -37,17 +43,16 @@ let
           };
         };
       };
+
+  shell = converge.env.overrideAttrs (old: {
+    buildInputs = with pkgs; old.buildInputs ++ [
+      cabal-install
+      ghcid
+      hlint
+    ];
+  });
 in
-  rec {
-    converge = pkgs.haskellPackages.converge;
-
+  { inherit converge;
     inherit dockerImage;
-
-    shell = converge.env.overrideAttrs (old: {
-      buildInputs = with pkgs; old.buildInputs ++ [
-        cabal-install
-        ghcid
-        hlint
-      ];
-    });
+    inherit shell;
   }
