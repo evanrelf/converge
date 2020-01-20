@@ -30,7 +30,7 @@ let
     };
   };
 
-  pkgs = import ./nix/nixpkgs.nix { inherit config; inherit system; };
+  pkgs = import ./nix/nixpkgs.nix { inherit config system; };
 
   linuxPkgs =
     import ./nix/nixpkgs.nix { inherit config; system = "x86_64-linux"; };
@@ -63,8 +63,9 @@ let
     ];
   });
 in
-  { inherit converge;
-    inherit executable;
-    inherit dockerImage;
-    inherit shell;
+  { inherit
+      converge
+      executable
+      dockerImage
+      shell;
   }
