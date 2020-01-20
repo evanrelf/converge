@@ -32,24 +32,28 @@ let
 
   pkgs = import ./nix/nixpkgs.nix { inherit config; inherit system; };
 
+  linuxPkgs =
+    import ./nix/nixpkgs.nix { inherit config; system = "x86_64-linux"; };
+
+  converge = pkgs.haskellPackages.converge;
+
+  executable = pkgs.haskell.lib.justStaticExecutables converge;
+
+  # To load into Docker and run as a container:
+  # docker load --input $(nix-build --no-link -A dockerImage)
+  # docker run --interactive --tty --publish "8080:8080" --rm converge:latest
   dockerImage =
-    # docker load --input $(nix-build --no-link -A dockerImage)
-    # docker run --interactive --tty --publish "8080:8080" --rm converge:latest
-    let
-      linuxPkgs =
-        import ./nix/nixpkgs.nix { inherit config; system = "x86_64-linux"; };
-    in
-      linuxPkgs.dockerTools.buildImage {
-        name = "converge";
-        tag = "latest";
-        contents =
-          linuxPkgs.haskell.lib.justStaticExecutables
-            linuxPkgs.haskellPackages.converge;
-        config = {
-          Entrypoint = "/bin/converge";
-          ExposedPorts = { "8080" = {}; };
-        };
+    linuxPkgs.dockerTools.buildImage {
+      name = "converge";
+      tag = "latest";
+      contents =
+        linuxPkgs.haskell.lib.justStaticExecutables
+          linuxPkgs.haskellPackages.converge;
+      config = {
+        Entrypoint = "/bin/converge";
+        ExposedPorts = { "8080" = {}; };
       };
+    };
 
   shell = pkgs.haskellPackages.converge.env.overrideAttrs (old: {
     buildInputs = with pkgs; old.buildInputs ++ [
@@ -59,9 +63,8 @@ let
     ];
   });
 in
-  rec {
-    converge = pkgs.haskellPackages.converge;
-    convergeBin = pkgs.haskell.lib.justStaticExecutables converge;
+  { inherit converge;
+    inherit executable;
     inherit dockerImage;
     inherit shell;
   }
