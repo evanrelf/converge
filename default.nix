@@ -10,7 +10,11 @@ let
     doHaddock = false;
   });
 
-  src = pkgs.nix-gitignore.gitignoreSource [ ".git/" ] ./.;
+  src = pkgs.nix-gitignore.gitignoreSource [
+    ".git/"
+    "default.nix"
+    "shell.nix"
+  ] ./.;
 
   config = {
     packageOverrides = pkgs: rec {
@@ -30,7 +34,7 @@ let
 
   dockerImage =
     # docker load --input $(nix-build --no-link -A dockerImage)
-    # docker run --interactive --tty --rm converge:latest
+    # docker run --interactive --tty --publish "8080:8080" --rm converge:latest
     let
       linuxPkgs =
         import ./nix/nixpkgs.nix { inherit config; system = "x86_64-linux"; };
