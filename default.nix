@@ -12,8 +12,8 @@ let
 
   src = pkgs.nix-gitignore.gitignoreSource [
     ".git/"
-    "default.nix"
-    "shell.nix"
+    "/default.nix"
+    "/shell.nix"
   ] ./.;
 
   config = {
