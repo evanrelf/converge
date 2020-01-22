@@ -33,9 +33,11 @@ type WebhookApi =
     :> Servant.Summary "Health check"
     :> Servant.Get '[Servant.PlainText] Text
     :<|>
+
   Webhook "Ping from GitHub"
     'GitHub.WebhookPingEvent GitHub.PingEvent
     :<|>
+
   Webhook "Pull request event from GitHub"
     'GitHub.WebhookPullRequestEvent GitHub.PullRequestEvent
 
