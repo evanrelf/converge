@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeOperators #-}
@@ -12,28 +13,31 @@ module Converge
   )
 where
 
+import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as GitHub
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
 
 
+type Webhook (summary :: Symbol) (webhook :: Servant.RepoWebhookEvent) event =
+  "webhook"
+    :> Servant.Summary summary
+    :> Servant.GitHubEvent '[webhook]
+    :> Servant.GitHubSignedReqBody '[Servant.JSON] event
+    :> Servant.Post '[Servant.JSON] ()
+
+
 type WebhookApi =
-  "webhook"
-    :> Servant.Summary "Ping from GitHub"
-    :> Servant.GitHubEvent '[ 'GitHub.WebhookPingEvent ]
-    :> Servant.GitHubSignedReqBody '[Servant.JSON] GitHub.PingEvent
-    :> Servant.Post '[Servant.JSON] ()
-  :<|>
-  "webhook"
-    :> Servant.Summary "Pull request event from GitHub"
-    :> Servant.GitHubEvent '[ 'GitHub.WebhookPullRequestEvent ]
-    :> Servant.GitHubSignedReqBody '[Servant.JSON] GitHub.PullRequestEvent
-    :> Servant.Post '[Servant.JSON] ()
-  :<|>
   "health"
     :> Servant.Summary "Health check"
     :> Servant.Get '[Servant.PlainText] Text
+    :<|>
+  Webhook "Ping from GitHub"
+    'GitHub.WebhookPingEvent GitHub.PingEvent
+    :<|>
+  Webhook "Pull request event from GitHub"
+    'GitHub.WebhookPullRequestEvent GitHub.PullRequestEvent
 
 
 onPing
@@ -59,9 +63,9 @@ onHealthCheck = pure "All good"
 
 
 server :: Servant.Server WebhookApi
-server = onPing
+server = onHealthCheck
+    :<|> onPing
     :<|> onPullRequest
-    :<|> onHealthCheck
 
 
 --------------------------------------------------------------------------------
