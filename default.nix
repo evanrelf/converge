@@ -1,39 +1,50 @@
-{ system ? builtins.currentSystem
-, compiler ? "ghc865"
-}:
-
 let
-  onlyBuild = drv: pkgs.haskell.lib.overrideCabal drv (drv: {
-    doBenchmark = false;
-    doCheck = false;
-    doCoverage = false;
-    doHaddock = false;
-  });
+  onlyBuild = drv:
+    pkgs.haskell.lib.overrideCabal drv (drv: {
+      doBenchmark = false;
+      doCheck = false;
+      doCoverage = false;
+      doHaddock = false;
+    });
 
-  src = pkgs.nix-gitignore.gitignoreSource [
-    ".git/"
-    "/default.nix"
-    "/shell.nix"
-  ] ./.;
+  src =
+    pkgs.nix-gitignore.gitignoreSource [
+      ".git/"
+      "/default.nix"
+      "/shell.nix"
+    ] ./.;
 
-  config = {
-    packageOverrides = pkgs: rec {
-      haskellPackages =
-        pkgs.haskell.packages.${compiler}.override {
-          overrides = new: old: rec {
-            converge = new.callCabal2nix "converge" src {};
+  overlay = pkgsNew: pkgsOld: {
+    haskellPackages = pkgsOld.haskellPackages.override (old: {
+      overrides =
+        let
+          extension = haskellPackagesNew: haskellPackagesOld: {
+            converge =
+              haskellPackagesNew.callCabal2nix "converge" src {};
             fused-effects =
-              onlyBuild (new.callPackage ./nix/fused-effects.nix {});
-            relude = onlyBuild (new.callPackage ./nix/relude.nix {});
+              onlyBuild (haskellPackagesNew.callPackage ./nix/haskell-packages/fused-effects.nix {});
+            relude =
+              onlyBuild (haskellPackagesNew.callPackage ./nix/haskell-packages/relude.nix {});
           };
-        };
-    };
+        in
+          pkgsNew.lib.composeExtensions
+            (old.overrides or (_: _: {}))
+            extension;
+    });
   };
 
-  pkgs = import ./nix/nixpkgs.nix { inherit config system; };
+  pkgs =
+    import ./nix/nixpkgs.nix {
+      overlays = [ overlay ];
+      config = {};
+    };
 
   linuxPkgs =
-    import ./nix/nixpkgs.nix { inherit config; system = "x86_64-linux"; };
+    import ./nix/nixpkgs.nix {
+      system = "x86_64-linux";
+      overlays = [ overlay ];
+      config = {};
+    };
 
   converge = pkgs.haskellPackages.converge;
 
@@ -55,17 +66,19 @@ let
       };
     };
 
-  shell = pkgs.haskellPackages.converge.env.overrideAttrs (old: {
-    buildInputs = with pkgs; old.buildInputs ++ [
-      cabal-install
-      ghcid
-      hlint
-    ];
-  });
+  shell =
+    pkgs.haskellPackages.converge.env.overrideAttrs (old: {
+      buildInputs = with pkgs; old.buildInputs ++ [
+        cabal-install
+        ghcid
+        hlint
+      ];
+    });
 in
   { inherit
       converge
       executable
       dockerImage
-      shell;
+      shell
+    ;
   }
