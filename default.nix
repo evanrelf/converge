@@ -51,7 +51,7 @@ let
   executable = pkgs.haskell.lib.justStaticExecutables converge;
 
   # To load into Docker and run as a container:
-  # docker load --input $(nix-build --no-link -A dockerImage)
+  # docker load --input $(nix-build --no-link --attr dockerImage)
   # docker run --interactive --tty --publish "8080:8080" --rm converge:latest
   dockerImage =
     linuxPkgs.dockerTools.buildImage {
@@ -67,7 +67,7 @@ let
     };
 
   shell =
-    pkgs.haskellPackages.converge.env.overrideAttrs (old: {
+    converge.env.overrideAttrs (old: {
       buildInputs = with pkgs; old.buildInputs ++ [
         cabal-install
         ghcid
