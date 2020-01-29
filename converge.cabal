@@ -23,6 +23,11 @@ common common
 
   default-language: Haskell2010
   default-extensions:
+    DeriveAnyClass
+    DeriveFunctor
+    DeriveGeneric
+    DerivingStrategies
+    GeneralizedNewtypeDeriving
     OverloadedStrings
 
   ghc-options:
@@ -43,6 +48,8 @@ library
   import: common
   hs-source-dirs: src
   exposed-modules:
+    Control.Carrier.GitHub.IssueComments
+    Control.Effect.GitHub.IssueComments
     Converge
   -- other-modules:
 
@@ -51,6 +58,7 @@ library
     , github
     , servant-github-webhook
     , servant-server
+    , vector
 
 
 executable converge

@@ -23,6 +23,8 @@ let
               haskellPackagesNew.callCabal2nix "converge" src {};
             fused-effects =
               onlyBuild (haskellPackagesNew.callPackage ./nix/haskell-packages/fused-effects.nix {});
+            github =
+              onlyBuild (haskellPackagesNew.callPackage ./nix/haskell-packages/github.nix {});
             relude =
               onlyBuild (haskellPackagesNew.callPackage ./nix/haskell-packages/relude.nix {});
           };

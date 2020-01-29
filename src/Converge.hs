@@ -18,6 +18,9 @@ import qualified GitHub.Data as GitHub
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
+import Control.Algebra (Has)
+
+import Control.Effect.GitHub.IssueComments
 
 
 type Webhook (summary :: Symbol) (webhook :: Servant.RepoWebhookEvent) event =
