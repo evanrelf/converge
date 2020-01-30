@@ -13,7 +13,12 @@ copyright:   2020 Evan Relf
 build-type:  Simple
 
 
-common common
+--------------------------------------------------------------------------------
+-- Common
+--------------------------------------------------------------------------------
+
+
+common no-prelude
   build-depends:
     , base ^>= 4.12.0.0
   mixins:
@@ -40,8 +45,26 @@ common common
     -fshow-warning-groups
 
 
+common execuable
+  ghc-options:
+    -threaded
+    -rtsopts
+    -with-rtsopts=-N
+
+
+common common
+  import: no-prelude
+  build-depends:
+    , prelude
+
+
+--------------------------------------------------------------------------------
+-- Libraries
+--------------------------------------------------------------------------------
+
+
 library prelude
-  import: common
+  import: no-prelude
   hs-source-dirs: prelude
   exposed-modules:
     Prelude
@@ -57,7 +80,6 @@ library
     Control.Effect.GitHub.IssueComments
     Converge
   build-depends:
-    , prelude
     , fused-effects ^>= 1.0.0.0
     , github
     , servant-github-webhook
@@ -65,26 +87,30 @@ library
     , vector
 
 
+--------------------------------------------------------------------------------
+-- Executables
+--------------------------------------------------------------------------------
+
+
 executable converge
-  import: common
+  import: common, execuable
   main-is: Main.hs
   hs-source-dirs: app
   build-depends:
-    , prelude
     , converge
     , servant-server
     , warp
-  ghc-options:
-    -threaded
-    -rtsopts
-    -with-rtsopts=-N
+
+
+--------------------------------------------------------------------------------
+-- Tests
+--------------------------------------------------------------------------------
 
 
 test-suite test
-  import: common
+  import: common, execuable
   type: exitcode-stdio-1.0
   main-is: Main.hs
   hs-source-dirs: test
   build-depends:
-    , prelude
     , converge
