@@ -1,26 +1,83 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedWildCards #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 
+{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
+
 module Converge
-  ( WebhookApi
-  , server
-  , gitHubKey
-  )
+  -- ( WebhookApi
+  -- , server
+  -- , gitHubKey
+  -- )
 where
 
+import Control.Algebra (Has)
+import Control.Carrier.Lift (Lift, runM, sendM)
+import Control.Carrier.Reader (Reader, ask, runReader)
+import Control.Carrier.Throw.Either (Throw, runThrow, throwError)
 import GHC.TypeLits (Symbol)
-import qualified GitHub.Data as GitHub
+import qualified GitHub.Data as Data
+import qualified GitHub.Endpoints.Issues.Comments as Comments
+import qualified GitHub.Request as Request
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
-import Control.Algebra (Has)
 
-import Control.Effect.GitHub.IssueComments
+
+--------------------------------------------------------------------------------
+-- Scratchpad
+--------------------------------------------------------------------------------
+
+
+type GitHub sig m =
+  ( Has (Reader Data.Auth) sig m
+  , Has (Throw Data.Error) sig m
+  , Has (Lift IO) sig m
+  )
+
+
+runGitHub :: MonadIO m => Data.Auth -> _m a -> m (Either Data.Error a)
+runGitHub auth = runM . runThrow . runReader auth
+
+
+leaveComment
+  :: GitHub sig m
+  => Data.Name Data.Owner
+  -> Data.Name Data.Repo
+  -> Data.IssueNumber
+  -> Text
+  -> m ()
+leaveComment owner repo issueNumber body = do
+  auth <- ask @Data.Auth
+  result <- sendM $ Request.github auth (Comments.createCommentR owner repo issueNumber body)
+  whenLeft_ result throwError
+
+
+-- Works!
+test :: ByteString -> IO ()
+test token = do
+  -- I just used a personal access token
+  let auth = Data.OAuth token
+  result <- runGitHub auth $ do
+    let owner = "evanrelf"
+        repo = "github-apps-test"
+        issueNumber = Data.IssueNumber 1
+        body = "Hello world!"
+    leaveComment owner repo issueNumber body
+  print result
+
+
+--------------------------------------------------------------------------------
+-- Servant API
+--------------------------------------------------------------------------------
 
 
 type Webhook (summary :: Symbol) (webhook :: Servant.RepoWebhookEvent) event =
@@ -38,27 +95,27 @@ type WebhookApi =
     :<|>
 
   Webhook "Ping from GitHub"
-    'GitHub.WebhookPingEvent GitHub.PingEvent
+    'Data.WebhookPingEvent Data.PingEvent
     :<|>
 
   Webhook "Pull request event from GitHub"
-    'GitHub.WebhookPullRequestEvent GitHub.PullRequestEvent
+    'Data.WebhookPullRequestEvent Data.PullRequestEvent
 
 
 onPing
   :: Servant.RepoWebhookEvent
-  -> ((), GitHub.PingEvent)
+  -> ((), Data.PingEvent)
   -> Servant.Handler ()
-onPing GitHub.WebhookPingEvent (_, event) =
+onPing Data.WebhookPingEvent (_, event) =
   putTextLn ("PingEvent: " <> show event)
 onPing _ _ = pass
 
 
 onPullRequest
   :: Servant.RepoWebhookEvent
-  -> ((), GitHub.PullRequestEvent)
+  -> ((), Data.PullRequestEvent)
   -> Servant.Handler ()
-onPullRequest GitHub.WebhookPullRequestEvent (_, event) =
+onPullRequest Data.WebhookPullRequestEvent (_, event) =
   putTextLn ("PullRequstEvent: " <> show event)
 onPullRequest _ _ = pass
 
