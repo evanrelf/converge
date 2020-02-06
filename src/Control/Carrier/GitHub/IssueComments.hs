@@ -1,7 +1,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedWildCards #-}
+{-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
+
+{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 module Control.Carrier.GitHub.IssueComments
   ( IssueCommentsIOC (..)
@@ -10,34 +15,78 @@ module Control.Carrier.GitHub.IssueComments
 where
 
 import Control.Algebra
+import Control.Carrier.Lift (Lift, runM, sendM)
+import Control.Carrier.Reader (Reader, ask, runReader)
+import Control.Carrier.Throw.Either (Throw, runThrow, throwError)
+import GitHub.Data (Auth, Error, Name, Owner, Repo)
+import GitHub.Endpoints.Issues.Comments (commentR, commentsR, createCommentR, deleteCommentR, editCommentR)
+import GitHub.Request (github)
 
 import Control.Effect.GitHub.IssueComments (IssueComments (..))
 
 
-runIssueCommentsIO :: IssueCommentsIOC m a -> m a
-runIssueCommentsIO (IssueCommentsIOC run) = run
+runIssueCommentsIO
+  :: Auth
+  -> Name Owner
+  -> Name Repo
+  -> _carrier a
+  -> m (Either Error a)
+runIssueCommentsIO auth owner repo
+  = runM
+  . runThrow
+  . runReader repo
+  . runReader owner
+  . runReader auth
+  . runIssueCommentsIOC
 
 
-newtype IssueCommentsIOC m a = IssueCommentsIOC (m a)
+newtype IssueCommentsIOC m a = IssueCommentsIOC { runIssueCommentsIOC :: m a }
   deriving stock Show
   deriving newtype (Functor, Applicative, Monad)
 
 
-instance Algebra sig m
-      => Algebra (IssueComments :+: sig) (IssueCommentsIOC m) where
+instance
+  ( Has (Reader Auth) sig m
+  , Has (Reader (Name Owner)) sig m
+  , Has (Reader (Name Repo)) sig m
+  , Has (Throw Error) sig m
+  , Has (Lift IO) sig m
+  , Algebra sig m
+  )
+ => Algebra (IssueComments :+: sig) (IssueCommentsIOC m) where
   alg (R other) = IssueCommentsIOC (alg (handleCoercible other))
-  alg (L effect) = case effect of
-    GetComment commentId k ->
-      undefined
+  alg (L effect) = do
+    auth <- ask @Auth
+    owner <- ask @(Name Owner)
+    repo <- ask @(Name Repo)
 
-    GetComments issueNumber fetchCount k ->
-      undefined
+    case effect of
+      GetComment commentId k -> do
+        result <- sendM (github auth (commentR owner repo commentId))
+        case result of
+          Left err -> throwError err
+          Right issueComment -> k issueComment
 
-    CreateComment issueNumber body k ->
-      undefined
+      GetComments issueNumber fetchCount k -> do
+        result <- sendM (github auth (commentsR owner repo issueNumber fetchCount))
+        case result of
+          Left err -> throwError err
+          Right issueComments -> k issueComments
 
-    DeleteComment commentId k ->
-      undefined
+      CreateComment issueNumber body k -> do
+        result <- sendM (github auth (createCommentR owner repo issueNumber body))
+        case result of
+          Left err -> throwError err
+          Right comment -> k comment
 
-    EditComment commentId body k ->
-      undefined
+      DeleteComment commentId k -> do
+        result <- sendM (github auth (deleteCommentR owner repo commentId))
+        case result of
+          Left err -> throwError err
+          Right () -> k
+
+      EditComment commentId body k -> do
+        result <- sendM (github auth (editCommentR owner repo commentId body))
+        case result of
+          Left err -> throwError err
+          Right comment -> k comment
