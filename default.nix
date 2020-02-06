@@ -1,12 +1,4 @@
 let
-  onlyBuild = drv:
-    pkgs.haskell.lib.overrideCabal drv (drv: {
-      doBenchmark = false;
-      doCheck = false;
-      doCoverage = false;
-      doHaddock = false;
-    });
-
   src =
     pkgs.nix-gitignore.gitignoreSource [
       ".git/"
@@ -22,11 +14,12 @@ let
             converge =
               haskellPackagesNew.callCabal2nix "converge" src {};
             fused-effects =
-              onlyBuild (haskellPackagesNew.callPackage ./nix/haskell-packages/fused-effects.nix {});
+              pkgsNew.haskell.lib.dontCheck
+                (haskellPackagesNew.callPackage ./nix/haskell-packages/fused-effects.nix {});
             github =
-              onlyBuild (haskellPackagesNew.callPackage ./nix/haskell-packages/github.nix {});
+              haskellPackagesNew.callPackage ./nix/haskell-packages/github.nix {};
             relude =
-              onlyBuild (haskellPackagesNew.callPackage ./nix/haskell-packages/relude.nix {});
+              haskellPackagesNew.callPackage ./nix/haskell-packages/relude.nix {};
           };
         in
           pkgsNew.lib.composeExtensions
