@@ -18,8 +18,11 @@ let
                 (haskellPackagesNew.callPackage ./nix/haskell-packages/fused-effects.nix {});
             github =
               haskellPackagesNew.callPackage ./nix/haskell-packages/github.nix {};
-            relude =
-              haskellPackagesNew.callPackage ./nix/haskell-packages/relude.nix {};
+            relude = with pkgsNew.haskell.lib;
+              dontCheck
+                (appendPatches
+                  (haskellPackagesNew.callPackage ./nix/haskell-packages/relude.nix {})
+                  [ ./nix/haskell-packages/relude.patch ]);
           };
         in
           pkgsNew.lib.composeExtensions
