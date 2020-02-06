@@ -4,8 +4,8 @@
 }:
 mkDerivation {
   pname = "fused-effects";
-  version = "1.0.0.0";
-  sha256 = "463b9c9046ed2c36936f03ac52e1a2ad857c610b0c3585c5da85f232e0db1288";
+  version = "1.0.0.1";
+  sha256 = "2fbde9a4ea12ac00f6c7d1464676ffaffcd233938ff7357c744d394722aa21ec";
   libraryHaskellDepends = [ base transformers ];
   testHaskellDepends = [
     base containers hedgehog hedgehog-fn inspection-testing mtl tasty
