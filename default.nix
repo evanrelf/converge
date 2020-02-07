@@ -6,6 +6,7 @@ let
       "/shell.nix"
     ] ./.;
 
+
   overlay = pkgsNew: pkgsOld: {
     haskellPackages = pkgsOld.haskellPackages.override (old: {
       overrides =
@@ -13,13 +14,17 @@ let
           extension = haskellPackagesNew: haskellPackagesOld: {
             converge =
               haskellPackagesNew.callCabal2nix "converge" src {};
+
             fused-effects =
               pkgsNew.haskell.lib.dontCheck
                 (haskellPackagesNew.callPackage ./nix/haskell-packages/fused-effects.nix {});
+
             github =
               haskellPackagesNew.callPackage ./nix/haskell-packages/github.nix {};
+
             github-webhooks =
               haskellPackagesNew.callPackage ./nix/haskell-packages/github-webhooks.nix {};
+
             relude = with pkgsNew.haskell.lib;
               dontCheck
                 (appendPatches
@@ -33,11 +38,13 @@ let
     });
   };
 
+
   pkgs =
     import ./nix/nixpkgs.nix {
       overlays = [ overlay ];
       config = {};
     };
+
 
   linuxPkgs =
     import ./nix/nixpkgs.nix {
@@ -46,9 +53,12 @@ let
       config = {};
     };
 
+
   converge = pkgs.haskellPackages.converge;
 
+
   executable = pkgs.haskell.lib.justStaticExecutables converge;
+
 
   # To load into Docker and run as a container:
   # docker load --input $(nix-build --no-link --attr dockerImage)
@@ -65,6 +75,7 @@ let
         ExposedPorts = { "8080" = {}; };
       };
     };
+
 
   shell =
     converge.env.overrideAttrs (old: {
