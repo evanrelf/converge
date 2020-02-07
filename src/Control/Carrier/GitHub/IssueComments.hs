@@ -39,8 +39,8 @@ runIssueCommentsIO
   :: Auth
   -> Name Owner
   -> Name Repo
-  -> _carrier a
-  -> m (Either Error a)
+  -> _m a
+  -> IO (Either Error a)
 runIssueCommentsIO auth owner repo
   = runM
   . runThrow
