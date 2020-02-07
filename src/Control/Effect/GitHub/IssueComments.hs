@@ -5,6 +5,11 @@ module Control.Effect.GitHub.IssueComments
   , createComment
   , deleteComment
   , editComment
+  -- Re-exports
+  , Algebra
+  , Effect
+  , Has
+  , run
   )
 where
 

@@ -11,6 +11,8 @@
 module Control.Carrier.GitHub.IssueComments
   ( IssueCommentsIOC (..)
   , runIssueCommentsIO
+  -- Re-exports
+  , module Control.Effect.GitHub.IssueComments
   )
 where
 
@@ -22,7 +24,7 @@ import GitHub.Data (Auth, Error, Name, Owner, Repo)
 import GitHub.Endpoints.Issues.Comments (commentR, commentsR, createCommentR, deleteCommentR, editCommentR)
 import GitHub.Request (github)
 
-import Control.Effect.GitHub.IssueComments (IssueComments (..))
+import Control.Effect.GitHub.IssueComments
 
 
 runIssueCommentsIO
