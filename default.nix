@@ -18,6 +18,8 @@ let
                 (haskellPackagesNew.callPackage ./nix/haskell-packages/fused-effects.nix {});
             github =
               haskellPackagesNew.callPackage ./nix/haskell-packages/github.nix {};
+            github-webhooks =
+              haskellPackagesNew.callPackage ./nix/haskell-packages/github-webhooks.nix {};
             relude = with pkgsNew.haskell.lib;
               dontCheck
                 (appendPatches
