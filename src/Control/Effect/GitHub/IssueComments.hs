@@ -14,7 +14,7 @@ module Control.Effect.GitHub.IssueComments
 where
 
 
-import Control.Algebra
+import Control.Algebra (Algebra, Effect, HFunctor, Has, run, send)
 import Data.Vector (Vector)
 import GHC.Generics (Generic1)
 import GitHub.Data (Comment, FetchCount, Id, IssueComment, IssueNumber)
