@@ -9,7 +9,7 @@
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 
-module Control.Carrier.GitHub.IssueComments
+module Control.Carrier.GitHub.IssueComments.IO
   ( IssueCommentsIOC (..)
   , runIssueCommentsIO
   -- Re-exports
