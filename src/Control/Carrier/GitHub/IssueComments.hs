@@ -18,12 +18,18 @@ module Control.Carrier.GitHub.IssueComments
 where
 
 
-import Control.Algebra
+import Control.Algebra ((:+:) (..), alg, handleCoercible)
 import Control.Carrier.Lift (Lift, runM, sendM)
 import Control.Carrier.Reader (Reader, ask, runReader)
 import Control.Carrier.Throw.Either (Throw, runThrow, throwError)
 import GitHub.Data (Auth, Error, Name, Owner, Repo)
-import GitHub.Endpoints.Issues.Comments (commentR, commentsR, createCommentR, deleteCommentR, editCommentR)
+import GitHub.Endpoints.Issues.Comments
+  ( commentR
+  , commentsR
+  , createCommentR
+  , deleteCommentR
+  , editCommentR
+  )
 import GitHub.Request (github)
 
 import Control.Effect.GitHub.IssueComments
@@ -57,7 +63,7 @@ instance
   , Has (Lift IO) sig m
   , Algebra sig m
   )
- => Algebra (IssueComments :+: sig) (IssueCommentsIOC m) where
+  => Algebra (IssueComments :+: sig) (IssueCommentsIOC m) where
   alg (R other) = IssueCommentsIOC (alg (handleCoercible other))
   alg (L effect) = do
     auth <- ask @Auth
@@ -72,13 +78,15 @@ instance
           Right issueComment -> k issueComment
 
       GetComments issueNumber fetchCount k -> do
-        result <- sendM (github auth (commentsR owner repo issueNumber fetchCount))
+        result <- sendM
+          (github auth (commentsR owner repo issueNumber fetchCount))
         case result of
           Left err -> throwError err
           Right issueComments -> k issueComments
 
       CreateComment issueNumber body k -> do
-        result <- sendM (github auth (createCommentR owner repo issueNumber body))
+        result <- sendM
+          (github auth (createCommentR owner repo issueNumber body))
         case result of
           Left err -> throwError err
           Right comment -> k comment
