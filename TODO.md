@@ -10,6 +10,8 @@
 - Add more API endpoints to Servant
 - See if basic GitHub stuff like auth and errors can be generalized across
   multiple effects
+- Add timestamps to `Log` IO carrier (or wrap a third-party library like
+  `co-log`)
 
 ## Executable
 
