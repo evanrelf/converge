@@ -65,6 +65,7 @@ library
   exposed-modules:
     Control.Carrier.GitHub.IssueComments.IO
     Control.Effect.GitHub.IssueComments
+    Control.Effect.GitHub.PullRequestComments
     Converge
   build-depends:
     , fused-effects ^>= 1.0.0.0
