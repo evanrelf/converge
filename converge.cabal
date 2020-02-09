@@ -63,6 +63,7 @@ library
   import: common
   hs-source-dirs: src
   exposed-modules:
+    Control.Carrier.Log.IO
     Control.Effect.Log
     Converge
     GitHub.Carrier.Issue.Comments.IO
@@ -74,6 +75,7 @@ library
     , github
     , servant-github-webhook
     , servant-server
+    , text
     , vector
 
 
