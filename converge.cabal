@@ -64,6 +64,7 @@ library
   hs-source-dirs: src
   exposed-modules:
     Control.Carrier.GitHub.IssueComments.IO
+    Control.Carrier.GitHub.PullRequestComments.IO
     Control.Effect.GitHub.IssueComments
     Control.Effect.GitHub.PullRequestComments
     Converge
