@@ -22,7 +22,6 @@ where
 
 
 import Control.Algebra (Has)
-import Control.Carrier.Lift (Lift, sendM)
 import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
 import Servant ((:<|>) (..), (:>), Context ((:.)))
@@ -45,7 +44,7 @@ import GitHub.Carrier.Issue.Comments.IO
 program
   :: Has IssueComments sig m
   => Has Log sig m
-  => Has (Lift IO) sig m
+  => MonadIO m
   => m ()
 program = do
   let issueNumber = Data.IssueNumber 1
@@ -53,7 +52,7 @@ program = do
   log Info "Creating comment"
   result <- createComment issueNumber body
   log Info "Printing result"
-  sendM @IO (print result)
+  print result
   log Info "Finished"
 
 
