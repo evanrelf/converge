@@ -28,7 +28,7 @@ import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
 
-import Control.Carrier.GitHub.IssueComments.IO
+import GitHub.Carrier.Issue.Comments.IO
 
 
 --------------------------------------------------------------------------------

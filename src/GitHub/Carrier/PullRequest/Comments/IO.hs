@@ -9,11 +9,11 @@
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 
-module Control.Carrier.GitHub.PullRequestComments.IO
+module GitHub.Carrier.PullRequest.Comments.IO
   ( PullRequestCommentsIOC (..)
   , runPullRequestCommentsIO
   -- Re-exports
-  , module Control.Effect.GitHub.PullRequestComments
+  , module GitHub.Effect.PullRequest.Comments
   )
 where
 
@@ -30,7 +30,7 @@ import GitHub.Endpoints.PullRequests.Comments
   )
 import GitHub.Request (github)
 
-import Control.Effect.GitHub.PullRequestComments
+import GitHub.Effect.PullRequest.Comments
 
 
 runPullRequestCommentsIO

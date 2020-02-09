@@ -1,4 +1,4 @@
-module Control.Effect.GitHub.PullRequestComments
+module GitHub.Effect.PullRequest.Comments
   ( PullRequestComments (..)
   , getComment
   , getComments
