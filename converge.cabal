@@ -63,6 +63,7 @@ library
   import: common
   hs-source-dirs: src
   exposed-modules:
+    Control.Effect.Log
     Converge
     GitHub.Carrier.Issue.Comments.IO
     GitHub.Carrier.PullRequest.Comments.IO
