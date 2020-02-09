@@ -56,12 +56,12 @@ newtype IssueCommentsIOC m a = IssueCommentsIOC { runIssueCommentsIOC :: m a }
 
 
 instance
-  ( Has (Reader Auth) sig m
+  ( Algebra sig m
+  , Has (Reader Auth) sig m
   , Has (Reader (Name Owner)) sig m
   , Has (Reader (Name Repo)) sig m
   , Has (Throw Error) sig m
   , Has (Lift IO) sig m
-  , Algebra sig m
   )
   => Algebra (IssueComments :+: sig) (IssueCommentsIOC m) where
   alg (R other) = IssueCommentsIOC (alg (handleCoercible other))
@@ -72,33 +72,34 @@ instance
 
     case effect of
       GetComment commentId k -> do
-        result <- sendM (github auth (commentR owner repo commentId))
+        result <- sendM @IO (github auth (commentR owner repo commentId))
         case result of
-          Left err -> throwError err
+          Left err -> throwError @Error err
           Right issueComment -> k issueComment
 
       GetComments issueNumber fetchCount k -> do
-        result <- sendM
+        result <- sendM @IO
           (github auth (commentsR owner repo issueNumber fetchCount))
         case result of
-          Left err -> throwError err
+          Left err -> throwError @Error err
           Right issueComments -> k issueComments
 
       CreateComment issueNumber body k -> do
-        result <- sendM
+        result <- sendM @IO
           (github auth (createCommentR owner repo issueNumber body))
         case result of
-          Left err -> throwError err
+          Left err -> throwError @Error err
           Right comment -> k comment
 
       DeleteComment commentId k -> do
-        result <- sendM (github auth (deleteCommentR owner repo commentId))
+        result <- sendM @IO (github auth (deleteCommentR owner repo commentId))
         case result of
-          Left err -> throwError err
+          Left err -> throwError @Error err
           Right () -> k
 
       EditComment commentId body k -> do
-        result <- sendM (github auth (editCommentR owner repo commentId body))
+        result <- sendM @IO
+          (github auth (editCommentR owner repo commentId body))
         case result of
-          Left err -> throwError err
+          Left err -> throwError @Error err
           Right comment -> k comment
