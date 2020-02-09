@@ -63,11 +63,11 @@ library
   import: common
   hs-source-dirs: src
   exposed-modules:
-    Control.Carrier.GitHub.IssueComments.IO
-    Control.Carrier.GitHub.PullRequestComments.IO
-    Control.Effect.GitHub.IssueComments
-    Control.Effect.GitHub.PullRequestComments
     Converge
+    GitHub.Carrier.Issue.Comments.IO
+    GitHub.Carrier.PullRequest.Comments.IO
+    GitHub.Effect.Issue.Comments
+    GitHub.Effect.PullRequest.Comments
   build-depends:
     , fused-effects ^>= 1.0.0.0
     , github

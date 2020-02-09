@@ -9,11 +9,11 @@
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 
-module Control.Carrier.GitHub.IssueComments.IO
+module GitHub.Carrier.Issue.Comments.IO
   ( IssueCommentsIOC (..)
   , runIssueCommentsIO
   -- Re-exports
-  , module Control.Effect.GitHub.IssueComments
+  , module GitHub.Effect.Issue.Comments
   )
 where
 
@@ -32,7 +32,7 @@ import GitHub.Endpoints.Issues.Comments
   )
 import GitHub.Request (github)
 
-import Control.Effect.GitHub.IssueComments
+import GitHub.Effect.Issue.Comments
 
 
 runIssueCommentsIO
