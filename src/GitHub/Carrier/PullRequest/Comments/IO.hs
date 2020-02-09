@@ -19,7 +19,6 @@ where
 
 
 import Control.Algebra ((:+:) (..), alg, handleCoercible)
-import Control.Carrier.Lift (Lift, runM, sendM)
 import Control.Carrier.Reader (Reader, ask, runReader)
 import Control.Carrier.Throw.Either (Throw, runThrow, throwError)
 import GitHub.Data (Auth, Error, Name, Owner, Repo)
@@ -39,19 +38,18 @@ runPullRequestCommentsIO
   -> Name Repo
   -> _m a
   -> IO (Either Error a)
-runPullRequestCommentsIO auth owner repo
-  = runM
-  . runThrow
+runPullRequestCommentsIO auth owner repo (PullRequestCommentsIOC m)
+  = runThrow
   . runReader repo
   . runReader owner
   . runReader auth
-  . runPullRequestCommentsIOC
+  $ m
 
 
 newtype PullRequestCommentsIOC m a
-  = PullRequestCommentsIOC { runPullRequestCommentsIOC :: m a }
+  = PullRequestCommentsIOC (m a)
   deriving stock Show
-  deriving newtype (Functor, Applicative, Monad)
+  deriving newtype (Functor, Applicative, Monad, MonadIO)
 
 
 instance
@@ -60,7 +58,7 @@ instance
   , Has (Reader (Name Owner)) sig m
   , Has (Reader (Name Repo)) sig m
   , Has (Throw Error) sig m
-  , Has (Lift IO) sig m
+  , MonadIO m
   )
   => Algebra (PullRequestComments :+: sig) (PullRequestCommentsIOC m) where
   alg (R other) = PullRequestCommentsIOC (alg (handleCoercible other))
@@ -71,30 +69,22 @@ instance
 
     case effect of
       GetComment commentId k -> do
-        result <- sendM @IO
+        result <- liftIO
           (github auth (pullRequestCommentR owner repo commentId))
         case result of
           Left err -> throwError @Error err
           Right comment -> k comment
 
       GetComments issueNumber fetchCount k -> do
-        result <- sendM @IO
+        result <- liftIO
           (github auth (pullRequestCommentsR owner repo issueNumber fetchCount))
         case result of
           Left err -> throwError @Error err
           Right comments -> k comments
 
       CreateComment issueNumber commit path position body k -> do
-        result <- sendM @IO
-          (github auth
-            (createPullCommentR
-              owner
-              repo
-              issueNumber
-              commit
-              path
-              position
-              body))
+        result <- liftIO (github auth
+          (createPullCommentR owner repo issueNumber commit path position body))
         case result of
           Left err -> throwError @Error err
           Right comment -> k comment

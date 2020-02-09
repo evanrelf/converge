@@ -19,7 +19,6 @@ where
 
 
 import Control.Algebra ((:+:) (..), alg, handleCoercible)
-import Control.Carrier.Lift (Lift, runM, sendM)
 import Control.Carrier.Reader (Reader, ask, runReader)
 import Control.Carrier.Throw.Either (Throw, runThrow, throwError)
 import GitHub.Data (Auth, Error, Name, Owner, Repo)
@@ -40,19 +39,18 @@ runIssueCommentsIO
   -> Name Owner
   -> Name Repo
   -> _m a
-  -> IO (Either Error a)
-runIssueCommentsIO auth owner repo
-  = runM
-  . runThrow
+  -> m (Either Error a)
+runIssueCommentsIO auth owner repo (IssueCommentsIOC m)
+  = runThrow
   . runReader repo
   . runReader owner
   . runReader auth
-  . runIssueCommentsIOC
+  $ m
 
 
-newtype IssueCommentsIOC m a = IssueCommentsIOC { runIssueCommentsIOC :: m a }
+newtype IssueCommentsIOC m a = IssueCommentsIOC (m a)
   deriving stock Show
-  deriving newtype (Functor, Applicative, Monad)
+  deriving newtype (Functor, Applicative, Monad, MonadIO)
 
 
 instance
@@ -61,7 +59,7 @@ instance
   , Has (Reader (Name Owner)) sig m
   , Has (Reader (Name Repo)) sig m
   , Has (Throw Error) sig m
-  , Has (Lift IO) sig m
+  , MonadIO m
   )
   => Algebra (IssueComments :+: sig) (IssueCommentsIOC m) where
   alg (R other) = IssueCommentsIOC (alg (handleCoercible other))
@@ -72,34 +70,33 @@ instance
 
     case effect of
       GetComment commentId k -> do
-        result <- sendM @IO (github auth (commentR owner repo commentId))
+        result <- liftIO (github auth (commentR owner repo commentId))
         case result of
           Left err -> throwError @Error err
           Right issueComment -> k issueComment
 
       GetComments issueNumber fetchCount k -> do
-        result <- sendM @IO
+        result <- liftIO
           (github auth (commentsR owner repo issueNumber fetchCount))
         case result of
           Left err -> throwError @Error err
           Right issueComments -> k issueComments
 
       CreateComment issueNumber body k -> do
-        result <- sendM @IO
+        result <- liftIO
           (github auth (createCommentR owner repo issueNumber body))
         case result of
           Left err -> throwError @Error err
           Right comment -> k comment
 
       DeleteComment commentId k -> do
-        result <- sendM @IO (github auth (deleteCommentR owner repo commentId))
+        result <- liftIO (github auth (deleteCommentR owner repo commentId))
         case result of
           Left err -> throwError @Error err
           Right () -> k
 
       EditComment commentId body k -> do
-        result <- sendM @IO
-          (github auth (editCommentR owner repo commentId body))
+        result <- liftIO (github auth (editCommentR owner repo commentId body))
         case result of
           Left err -> throwError @Error err
           Right comment -> k comment

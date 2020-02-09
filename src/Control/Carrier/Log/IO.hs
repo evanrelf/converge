@@ -19,24 +19,23 @@ where
 
 
 import Control.Algebra ((:+:) (..), alg, handleCoercible)
-import Control.Carrier.Lift (Lift, runM, sendM)
 import qualified Data.Text.IO as Text
 
 import Control.Effect.Log
 
 
-runLogIO :: _m a -> IO a
-runLogIO = runM . runLogIOC
+runLogIO :: LogIOC m a -> m a
+runLogIO (LogIOC m) = m
 
 
-newtype LogIOC m a = LogIOC { runLogIOC :: m a }
+newtype LogIOC m a = LogIOC (m a)
   deriving stock Show
-  deriving newtype (Functor, Applicative, Monad)
+  deriving newtype (Functor, Applicative, Monad, MonadIO)
 
 
 instance
   ( Algebra sig m
-  , Has (Lift IO) sig m
+  , MonadIO m
   )
   => Algebra (Log :+: sig) (LogIOC m) where
   alg (R other) = LogIOC (alg (handleCoercible other))
@@ -49,5 +48,5 @@ instance
               "[ WARN  ]"
             Error ->
               "[ ERROR ]"
-    sendM @IO (Text.hPutStrLn stderr (severityText <> " " <> message))
+    liftIO (Text.hPutStrLn stderr (severityText <> " " <> message))
     k
