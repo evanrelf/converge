@@ -22,3 +22,11 @@
 - Write basic test of core (pure) functions using `hspec`
 
 ## Other
+
+- Automatically apply Nixpkgs overlays
+  - [ ] Create a directory for overlays, e.g. `nix/overlays/`
+  - [ ] Apply overlays to `nix/nixpkgs.nix` in alphabetical order based on
+    filename (e.g. maybe something like `01-hackage-packages.nix`,
+    `02-local-packages.nix`, `package-overrides.nix`)
+  - Could be used to separate `cabal2nix` codegen from project-specific
+    overrides such as the `relude` patch, or disabling checks on `fused-effects`
