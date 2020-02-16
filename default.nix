@@ -22,14 +22,6 @@ let
     };
 
 
-  linuxPkgs =
-    import ./nix/nixpkgs.nix {
-      system = "x86_64-linux";
-      overlays = [ haskellPackagesOverlay ];
-      config = {};
-    };
-
-
   converge = pkgs.haskellPackages.converge;
 
 
@@ -40,17 +32,25 @@ let
   # docker load --input $(nix-build --no-link --attr dockerImage)
   # docker run --interactive --tty --publish "8080:8080" --rm converge:latest
   dockerImage =
-    linuxPkgs.dockerTools.buildImage {
-      name = "converge";
-      tag = "latest";
-      contents =
-        linuxPkgs.haskell.lib.justStaticExecutables
-          linuxPkgs.haskellPackages.converge;
-      config = {
-        Entrypoint = "/bin/converge";
-        ExposedPorts = { "8080" = {}; };
+    let
+      linuxPkgs =
+        import ./nix/nixpkgs.nix {
+          system = "x86_64-linux";
+          overlays = [ haskellPackagesOverlay ];
+          config = {};
+        };
+    in
+      linuxPkgs.dockerTools.buildImage {
+        name = "converge";
+        tag = "latest";
+        contents =
+          linuxPkgs.haskell.lib.justStaticExecutables
+            linuxPkgs.haskellPackages.converge;
+        config = {
+          Entrypoint = "/bin/converge";
+          ExposedPorts = { "8080" = {}; };
+        };
       };
-    };
 
 
   shell =
