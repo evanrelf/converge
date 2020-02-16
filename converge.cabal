@@ -24,7 +24,7 @@ common common
     , relude ^>= 0.6.0.0
   mixins:
     , base hiding (Prelude)
-    , relude (Relude as Prelude)
+    , relude (Relude as Prelude, Relude.Extra.Map)
   default-language: Haskell2010
   default-extensions:
     DeriveAnyClass
@@ -67,6 +67,7 @@ library
     Control.Effect.Log
     Converge
     GitHub.Carrier.Issue.Comments.IO
+    GitHub.Carrier.Issue.Comments.Pure
     GitHub.Carrier.PullRequest.Comments.IO
     GitHub.Effect.Issue.Comments
     GitHub.Effect.PullRequest.Comments
