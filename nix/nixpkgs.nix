@@ -6,4 +6,4 @@ let
     sha256 = "16wdsazc7g09ibcxlqsa3kblzhbbpdpb6s29llliybw73cp37b9s";
   };
 in
-  args@{ config ? {}, ... }: import nixpkgs args
+  import nixpkgs
