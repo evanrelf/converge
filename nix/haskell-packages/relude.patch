@@ -1,23 +1,6 @@
 diff --git a/src/Relude.hs b/src/Relude.hs
 index 7c5d7db..9d5b904 100644
---- a/src/Relude.hs
-+++ b/src/Relude.hs
-@@ -94,6 +94,7 @@ module Relude
-          -- $deepseq
-        , module Relude.Exception
-          -- $exception
-+       , module Relude.Extra.Newtype
-        , module Relude.File
-          -- $file
-        , module Relude.Foldable
-@@ -127,13 +128,56 @@ import Relude.Container
- import Relude.Debug
- import Relude.DeepSeq
- import Relude.Exception
-+import Relude.Extra.Newtype
- import Relude.File
- import Relude.Foldable
- import Relude.Function
+@@ -134,7 +134,49 @@ import Relude.Container
  import Relude.Functor
  import Relude.Lifted
  import Relude.List
@@ -68,21 +51,3 @@ index 7c5d7db..9d5b904 100644
  import Relude.Monoid
  import Relude.Nub
  import Relude.Numeric
-diff --git a/src/Relude/Extra/Newtype.hs b/src/Relude/Extra/Newtype.hs
-index 55eb3f3..1c2c583 100644
---- a/src/Relude/Extra/Newtype.hs
-+++ b/src/Relude/Extra/Newtype.hs
-@@ -19,11 +19,12 @@ module Relude.Extra.Newtype
-        , (#.)
-        ) where
- 
--import Relude
-+import Data.Coerce (Coercible, coerce)
- 
- 
- -- $setup
- -- >>> :set -XTypeApplications
-+-- >>> import Relude
- -- >>> import Data.Semigroup (Max (..))
- 
- {- | Unwraps value from @newtype@.
