@@ -22,8 +22,3 @@
 - Write basic test of core (pure) functions using `hspec`
 
 ## Other
-
-- Write function to automatically add Haskell packages to the Nix overlay
-  - [ ] Read the contents of the `nix/haskell-packages/` directory
-  - [ ] Apply patches if they exist and their file name matches
-  - [ ] Allow easier configuration of stuff like `dontCheck`

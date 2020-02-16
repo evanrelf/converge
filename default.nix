@@ -1,36 +1,12 @@
 let
-  src =
-    pkgs.nix-gitignore.gitignoreSource [
-      ".git/"
-      "/default.nix"
-      "/shell.nix"
-    ] ./.;
-
-
-  overlay = pkgsNew: pkgsOld: {
+  haskellPackagesOverlay = pkgsNew: pkgsOld: {
     haskellPackages = pkgsOld.haskellPackages.override (old: {
       overrides =
         let
-          extension = haskellPackagesNew: haskellPackagesOld: {
-            converge =
-              haskellPackagesNew.callCabal2nix "converge" src {};
-
-            fused-effects =
-              pkgsNew.haskell.lib.dontCheck
-                (haskellPackagesNew.callPackage ./nix/haskell-packages/fused-effects.nix {});
-
-            github =
-              haskellPackagesNew.callPackage ./nix/haskell-packages/github.nix {};
-
-            github-webhooks =
-              haskellPackagesNew.callPackage ./nix/haskell-packages/github-webhooks.nix {};
-
-            relude = with pkgsNew.haskell.lib;
-              dontCheck
-                (appendPatches
-                  (haskellPackagesNew.callPackage ./nix/haskell-packages/relude.nix {})
-                  [ ./nix/haskell-packages/relude.patch ]);
-          };
+          extension =
+            (pkgsNew.haskell.lib.packagesFromDirectory {
+              directory = ./nix/haskell-packages;
+            });
         in
           pkgsNew.lib.composeExtensions
             (old.overrides or (_: _: {}))
@@ -41,7 +17,7 @@ let
 
   pkgs =
     import ./nix/nixpkgs.nix {
-      overlays = [ overlay ];
+      overlays = [ haskellPackagesOverlay ];
       config = {};
     };
 
@@ -49,7 +25,7 @@ let
   linuxPkgs =
     import ./nix/nixpkgs.nix {
       system = "x86_64-linux";
-      overlays = [ overlay ];
+      overlays = [ haskellPackagesOverlay ];
       config = {};
     };
 
