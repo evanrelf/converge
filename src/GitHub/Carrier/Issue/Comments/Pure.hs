@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedWildCards #-}
@@ -22,7 +24,9 @@ where
 import Control.Algebra
 import Control.Carrier.State.Strict (State, gets, modify)
 import Control.Carrier.Throw.Either (Throw, throwError)
+import Data.Generics.Product.Fields (field)
 import qualified GitHub.Data as Data
+import Optics (view)
 import Relude.Extra.Map (lookup)
 
 import GitHub.Effect.Issue.Comments
@@ -31,7 +35,7 @@ import GitHub.Effect.Issue.Comments
 data IssueCommentsState = IssueCommentsState
   { issues :: Map Data.IssueNumber (Set (Data.Id Data.Comment))
   , comments :: Map (Data.Id Data.Comment) Data.IssueComment
-  } deriving stock Show
+  } deriving stock (Generic, Show)
 
 
 instance Semigroup IssueCommentsState where
@@ -74,13 +78,13 @@ instance
 
     case effect of
       GetComment commentId k -> do
-        comments <- gets @IssueCommentsState comments
+        comments <- gets @IssueCommentsState (view (field @"comments"))
         case lookup commentId comments of
           Nothing -> throwError @Error (CommentNotFound commentId)
           Just comment -> k comment
 
       GetComments issueNumber fetchCount k -> do
-        issues <- gets @IssueCommentsState issues
+        issues <- gets @IssueCommentsState (view (field @"issues"))
         case lookup issueNumber issues of
           Nothing -> throwError @Error (IssueNotFound issueNumber)
           Just issue -> undefined
