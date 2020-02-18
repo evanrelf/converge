@@ -73,7 +73,9 @@ library
     GitHub.Effect.PullRequest.Comments
   build-depends:
     , fused-effects ^>= 1.0.0.0
+    , generic-optics
     , github
+    , optics
     , servant-github-webhook
     , servant-server
     , text
