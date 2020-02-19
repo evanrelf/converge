@@ -22,9 +22,11 @@ where
 
 
 import Control.Algebra
+import Control.Carrier.Fresh.Strict (Fresh, fresh)
 import Control.Carrier.State.Strict (State, gets, modify)
 import Control.Carrier.Throw.Either (Throw, throwError)
 import Data.Generics.Product.Fields (field)
+import Data.Time.Clock (UTCTime)
 import qualified GitHub.Data as Data
 import Optics (view)
 import Relude.Extra.Map (lookup)
@@ -70,6 +72,7 @@ newtype IssueCommentsPureC m a = IssueCommentsPureC (m a)
 instance
   ( Algebra sig m
   , Has (State IssueCommentsState) sig m
+  , Has Fresh sig m
   , Has (Throw Error) sig m
   )
   => Algebra (IssueComments :+: sig) (IssueCommentsPureC m) where
@@ -90,7 +93,41 @@ instance
           Just issue -> undefined
 
       CreateComment issueNumber body k -> do
+        id <- fresh
+        let updatedAt = undefined
+        let user = Data.SimpleUser
+              { Data.simpleUserId = Data.mkId (Proxy :: _ Data.User) 0
+              , Data.simpleUserLogin = undefined
+              , Data.simpleUserAvatarUrl = Data.URL "https://example.com"
+              , Data.simpleUserUrl = Data.URL "https://example.com"
+              }
+        let url = Data.URL "https://example.com"
+        let htmlUrl = Data.URL "https://example.com"
+        let createdAt = undefined
+        let issueComment = Data.IssueComment
+              { Data.issueCommentUpdatedAt = updatedAt
+              , Data.issueCommentUser = user
+              , Data.issueCommentUrl = url
+              , Data.issueCommentHtmlUrl = htmlUrl
+              , Data.issueCommentCreatedAt = undefined
+              , Data.issueCommentBody = body
+              , Data.issueCommentId = id
+              }
+        let comment = Data.Comment
+              { Data.commentPosition = Nothing
+              , Data.commentLine = Nothing
+              , Data.commentBody = body
+              , Data.commentCommitId = Nothing
+              , Data.commentUpdatedAt = updatedAt
+              , Data.commentHtmlUrl = Just htmlUrl
+              , Data.commentUrl = url
+              , Data.commentCreatedAt = createdAt
+              , Data.commentPath = Nothing
+              , Data.commentUser = user
+              , Data.commentId = Data.mkId (Proxy :: _ Data.Comment) id
+              }
         undefined
+        k comment
 
       DeleteComment commentId k -> do
         undefined
