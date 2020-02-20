@@ -1,3 +1,13 @@
 { callCabal2nix, ... }:
 
-callCabal2nix "converge" ../../. {}
+let
+  pkgs = import ../nixpkgs.nix { config = {}; };
+
+  src =
+    pkgs.nix-gitignore.gitignoreSource [
+      ".git/"
+      "/nix/"
+      "/*.nix"
+    ] ../../.;
+in
+  callCabal2nix "converge" src {}
