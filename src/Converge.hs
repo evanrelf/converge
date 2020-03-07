@@ -20,8 +20,10 @@ module Converge
   -- )
 where
 
+import Prelude hiding (trace)
 
 import Control.Algebra (Has)
+import Control.Carrier.Trace.Printing (Trace, runTrace, trace)
 import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
 import Servant ((:<|>) (..), (:>), Context ((:.)))
@@ -44,15 +46,15 @@ import GitHub.Carrier.Issue.Comments.IO
 program
   :: Has IssueComments sig m
   => Has Log sig m
-  => MonadIO m
+  => Has Trace sig m
   => m ()
 program = do
   let issueNumber = Data.IssueNumber 1
   let body = "Hello world!"
   log Info "Creating comment"
   result <- createComment issueNumber body
-  log Info "Printing result"
-  print result
+  log Info "Tracing result"
+  trace (show result)
   log Info "Finished"
 
 
@@ -63,6 +65,7 @@ test token = do
   let repo = "github-apps-test"
   program
     & runIssueCommentsIO auth owner repo
+    & runTrace
     & runLogIO
 
 
