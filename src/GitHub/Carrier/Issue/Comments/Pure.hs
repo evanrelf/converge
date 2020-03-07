@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE NamedWildCards #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE TypeApplications #-}
@@ -23,13 +24,13 @@ where
 
 import Control.Algebra
 import Control.Carrier.Fresh.Strict (Fresh, fresh)
-import Control.Carrier.State.Strict (State, gets, modify)
+import Control.Carrier.State.Strict (State, get, gets, modify, put)
 import Control.Carrier.Throw.Either (Throw, throwError)
 import Data.Generics.Product.Fields (field)
 import Data.Time.Clock (UTCTime)
 import qualified GitHub.Data as Data
 import Optics (view)
-import Relude.Extra.Map (lookup)
+import qualified Relude.Extra.Map as Map
 
 import GitHub.Effect.Issue.Comments
 
@@ -82,13 +83,13 @@ instance
     case effect of
       GetComment commentId k -> do
         comments <- gets @IssueCommentsState (view (field @"comments"))
-        case lookup commentId comments of
+        case Map.lookup commentId comments of
           Nothing -> throwError @Error (CommentNotFound commentId)
           Just comment -> k comment
 
       GetComments issueNumber fetchCount k -> do
         issues <- gets @IssueCommentsState (view (field @"issues"))
-        case lookup issueNumber issues of
+        case Map.lookup issueNumber issues of
           Nothing -> throwError @Error (IssueNotFound issueNumber)
           Just issue -> undefined
 
@@ -130,7 +131,19 @@ instance
         k comment
 
       DeleteComment commentId k -> do
+        IssueCommentsState{issues, comments} <- get @IssueCommentsState
+        let newIssues = undefined
+        let newComments = undefined
+        put @IssueCommentsState $ IssueCommentsState
+          { issues = newIssues
+          , comments = newComments
+          }
         undefined
+
+-- data IssueCommentsState = IssueCommentsState
+--   { issues :: Map Data.IssueNumber (Set (Data.Id Data.Comment))
+--   , comments :: Map (Data.Id Data.Comment) Data.IssueComment
+--   } deriving stock (Generic, Show)
 
       EditComment commentId body k -> do
         undefined
