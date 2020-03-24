@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -7,6 +8,7 @@
 {-# LANGUAGE NamedWildCards #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -74,7 +76,7 @@ test token = do
 --------------------------------------------------------------------------------
 
 
-type Webhook
+type WebhookEndpoint
   (summary :: Symbol)
   (webhook :: Servant.RepoWebhookEvent)
   (event :: Type) =
@@ -91,30 +93,52 @@ type WebhookApi =
     :> Servant.Get '[Servant.PlainText] Text
     :<|>
 
-  Webhook "Ping from GitHub"
+  WebhookEndpoint "Ping from GitHub"
     'Data.WebhookPingEvent Data.PingEvent
     :<|>
 
-  Webhook "Pull request event from GitHub"
+  WebhookEndpoint "Pull request event from GitHub"
     'Data.WebhookPullRequestEvent Data.PullRequestEvent
 
 
-onPing
-  :: Servant.RepoWebhookEvent
-  -> ((), Data.PingEvent)
+type WebhookHandler event
+   = Servant.RepoWebhookEvent
+  -> ((), event)
   -> Servant.Handler ()
-onPing Data.WebhookPingEvent (_, event) =
+
+
+class ReflectWebhookEvent event where
+  reflectWebhookEvent :: Servant.RepoWebhookEvent
+
+
+instance ReflectWebhookEvent Data.PingEvent where
+  reflectWebhookEvent = Data.WebhookPingEvent
+
+
+instance ReflectWebhookEvent Data.PullRequestEvent where
+  reflectWebhookEvent = Data.WebhookPullRequestEvent
+
+
+webhookHandler
+  :: forall event
+   . ReflectWebhookEvent event
+  => (event -> Servant.Handler ())
+  -> WebhookHandler event
+webhookHandler handler repoWebhookEvent (_, event) =
+  if repoWebhookEvent == reflectWebhookEvent @event then
+    handler event
+  else
+    pass
+
+
+onPing :: WebhookHandler Data.PingEvent
+onPing = webhookHandler \event ->
   putTextLn ("PingEvent: " <> show event)
-onPing _ _ = pass
 
 
-onPullRequest
-  :: Servant.RepoWebhookEvent
-  -> ((), Data.PullRequestEvent)
-  -> Servant.Handler ()
-onPullRequest Data.WebhookPullRequestEvent (_, event) =
+onPullRequest :: WebhookHandler Data.PullRequestEvent
+onPullRequest = webhookHandler \event ->
   putTextLn ("PullRequstEvent: " <> show event)
-onPullRequest _ _ = pass
 
 
 onHealthCheck :: Servant.Handler Text
