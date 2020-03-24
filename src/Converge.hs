@@ -74,7 +74,10 @@ test token = do
 --------------------------------------------------------------------------------
 
 
-type Webhook (summary :: Symbol) (webhook :: Servant.RepoWebhookEvent) event =
+type Webhook
+  (summary :: Symbol)
+  (webhook :: Servant.RepoWebhookEvent)
+  (event :: Type) =
   "webhook"
     :> Servant.Summary summary
     :> Servant.GitHubEvent '[webhook]
