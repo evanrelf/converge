@@ -27,6 +27,7 @@ common common
     , relude (Relude as Prelude, Relude.Extra.Map)
   default-language: Haskell2010
   default-extensions:
+    BlockArguments
     DeriveAnyClass
     DeriveFunctor
     DeriveGeneric
