@@ -16,7 +16,7 @@ main :: IO ()
 main = do
   args <- getArgs
   let host = "localhost"
-  let port = fromMaybe 8080 (viaNonEmpty head args >>= readMaybe)
+  let port = fromMaybe 8080 (readMaybe =<< viaNonEmpty head args)
   let secret = "super-secret-code"
 
   putTextLn ("Running at http://" <> host <> ":" <> show port)

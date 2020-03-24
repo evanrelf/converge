@@ -86,67 +86,65 @@ instance
   )
   => Algebra (IssueComments :+: sig) (IssueCommentsPureC m) where
   alg (R other) = IssueCommentsPureC (alg (handleCoercible other))
-  alg (L effect) = do
+  alg (L effect) = case effect of
+    GetComment commentId k -> do
+      comments <- gets @IssueCommentsState (view (field @"comments"))
+      case Map.lookup commentId comments of
+        Nothing -> throwError @Error (CommentNotFound commentId)
+        Just comment -> k comment
 
-    case effect of
-      GetComment commentId k -> do
-        comments <- gets @IssueCommentsState (view (field @"comments"))
-        case Map.lookup commentId comments of
-          Nothing -> throwError @Error (CommentNotFound commentId)
-          Just comment -> k comment
+    GetComments issueNumber fetchCount k -> do
+      issues <- gets @IssueCommentsState (view (field @"issues"))
+      case Map.lookup issueNumber issues of
+        Nothing -> throwError @Error (IssueNotFound issueNumber)
+        Just issue -> undefined
 
-      GetComments issueNumber fetchCount k -> do
-        issues <- gets @IssueCommentsState (view (field @"issues"))
-        case Map.lookup issueNumber issues of
-          Nothing -> throwError @Error (IssueNotFound issueNumber)
-          Just issue -> undefined
+    CreateComment issueNumber body k -> do
+      id <- fresh
+      let updatedAt = undefined
+      let user = Data.SimpleUser
+            { Data.simpleUserId = Data.mkId (Proxy :: _ Data.User) 0
+            , Data.simpleUserLogin = undefined
+            , Data.simpleUserAvatarUrl = Data.URL "https://example.com"
+            , Data.simpleUserUrl = Data.URL "https://example.com"
+            }
+      let url = Data.URL "https://example.com"
+      let htmlUrl = Data.URL "https://example.com"
+      let createdAt = undefined
+      let issueComment = Data.IssueComment
+            { Data.issueCommentUpdatedAt = updatedAt
+            , Data.issueCommentUser = user
+            , Data.issueCommentUrl = url
+            , Data.issueCommentHtmlUrl = htmlUrl
+            , Data.issueCommentCreatedAt = undefined
+            , Data.issueCommentBody = body
+            , Data.issueCommentId = id
+            }
+      let comment = Data.Comment
+            { Data.commentPosition = Nothing
+            , Data.commentLine = Nothing
+            , Data.commentBody = body
+            , Data.commentCommitId = Nothing
+            , Data.commentUpdatedAt = updatedAt
+            , Data.commentHtmlUrl = Just htmlUrl
+            , Data.commentUrl = url
+            , Data.commentCreatedAt = createdAt
+            , Data.commentPath = Nothing
+            , Data.commentUser = user
+            , Data.commentId = Data.mkId (Proxy :: _ Data.Comment) id
+            }
+      undefined
+      k comment
 
-      CreateComment issueNumber body k -> do
-        id <- fresh
-        let updatedAt = undefined
-        let user = Data.SimpleUser
-              { Data.simpleUserId = Data.mkId (Proxy :: _ Data.User) 0
-              , Data.simpleUserLogin = undefined
-              , Data.simpleUserAvatarUrl = Data.URL "https://example.com"
-              , Data.simpleUserUrl = Data.URL "https://example.com"
-              }
-        let url = Data.URL "https://example.com"
-        let htmlUrl = Data.URL "https://example.com"
-        let createdAt = undefined
-        let issueComment = Data.IssueComment
-              { Data.issueCommentUpdatedAt = updatedAt
-              , Data.issueCommentUser = user
-              , Data.issueCommentUrl = url
-              , Data.issueCommentHtmlUrl = htmlUrl
-              , Data.issueCommentCreatedAt = undefined
-              , Data.issueCommentBody = body
-              , Data.issueCommentId = id
-              }
-        let comment = Data.Comment
-              { Data.commentPosition = Nothing
-              , Data.commentLine = Nothing
-              , Data.commentBody = body
-              , Data.commentCommitId = Nothing
-              , Data.commentUpdatedAt = updatedAt
-              , Data.commentHtmlUrl = Just htmlUrl
-              , Data.commentUrl = url
-              , Data.commentCreatedAt = createdAt
-              , Data.commentPath = Nothing
-              , Data.commentUser = user
-              , Data.commentId = Data.mkId (Proxy :: _ Data.Comment) id
-              }
-        undefined
-        k comment
+    DeleteComment commentId k -> do
+      IssueCommentsState{issues, comments} <- get @IssueCommentsState
+      let newIssues = undefined
+      let newComments = undefined
+      put @IssueCommentsState $ IssueCommentsState
+        { issues = newIssues
+        , comments = newComments
+        }
+      undefined
 
-      DeleteComment commentId k -> do
-        IssueCommentsState{issues, comments} <- get @IssueCommentsState
-        let newIssues = undefined
-        let newComments = undefined
-        put @IssueCommentsState $ IssueCommentsState
-          { issues = newIssues
-          , comments = newComments
-          }
-        undefined
-
-      EditComment commentId body k -> do
-        undefined
+    EditComment commentId body k -> do
+      undefined
