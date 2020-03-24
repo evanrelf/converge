@@ -23,9 +23,9 @@ where
 
 
 import Control.Algebra
-import Control.Carrier.Fresh.Strict (Fresh, fresh)
-import Control.Carrier.State.Strict (State, get, gets, modify, put)
-import Control.Carrier.Throw.Either (Throw, throwError)
+import Control.Carrier.Fresh.Strict (Fresh, evalFresh, fresh)
+import Control.Carrier.State.Strict (State, get, gets, modify, put, runState)
+import Control.Carrier.Throw.Either (Throw, runThrow, throwError)
 import Data.Generics.Product.Fields (field)
 import Data.Time.Clock (UTCTime)
 import qualified GitHub.Data as Data
@@ -61,8 +61,16 @@ data Error
   deriving stock (Eq, Show)
 
 
-runIssueCommentsPure :: IssueCommentsState -> _ -> m (Either Error a)
-runIssueCommentsPure initialState = undefined
+runIssueCommentsPure
+  :: Functor m
+  => IssueCommentsState
+  -> _m a
+  -> m (IssueCommentsState, Either Error a)
+runIssueCommentsPure initialState (IssueCommentsPureC m)
+  = runState initialState
+  . runThrow
+  . evalFresh 1
+  $ m
 
 
 newtype IssueCommentsPureC m a = IssueCommentsPureC (m a)
@@ -73,8 +81,8 @@ newtype IssueCommentsPureC m a = IssueCommentsPureC (m a)
 instance
   ( Algebra sig m
   , Has (State IssueCommentsState) sig m
-  , Has Fresh sig m
   , Has (Throw Error) sig m
+  , Has Fresh sig m
   )
   => Algebra (IssueComments :+: sig) (IssueCommentsPureC m) where
   alg (R other) = IssueCommentsPureC (alg (handleCoercible other))
@@ -139,11 +147,6 @@ instance
           , comments = newComments
           }
         undefined
-
--- data IssueCommentsState = IssueCommentsState
---   { issues :: Map Data.IssueNumber (Set (Data.Id Data.Comment))
---   , comments :: Map (Data.Id Data.Comment) Data.IssueComment
---   } deriving stock (Generic, Show)
 
       EditComment commentId body k -> do
         undefined
