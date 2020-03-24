@@ -22,5 +22,4 @@ mkDerivation ({
 } // {
   # Project-specific modifications
   doCheck = false;
-  patches = [ ./relude.patch ];
 })
