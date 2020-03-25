@@ -185,8 +185,16 @@ onPullRequest = webhookHandler
 
 server :: Servant.Server WebhookApi
 server = onHealthCheck
-    :<|> (\x y -> runM (onPing x y) )
-    :<|> (\x y -> runM (onPullRequest x y))
+    :<|> runWebhookHandler onPing
+    :<|> runWebhookHandler onPullRequest
+
+
+runWebhookHandler
+  :: WebhookHandler event _m
+  -> Servant.RepoWebhookEvent
+  -> ((), event)
+  -> Servant.Handler ()
+runWebhookHandler handler x y = runM (handler x y)
 
 
 sendH :: Has (Lift Servant.Handler) sig m => Servant.Handler a -> m a
