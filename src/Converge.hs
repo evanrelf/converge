@@ -131,18 +131,52 @@ webhookHandler handler repoWebhookEvent (_, event) =
     pass
 
 
+onHealthCheck :: Servant.Handler Text
+onHealthCheck = pure "All good"
+
+
 onPing :: WebhookHandler Data.PingEvent
-onPing = webhookHandler \event ->
-  putTextLn ("PingEvent: " <> show event)
+onPing = webhookHandler \_event -> putTextLn "Pong!"
 
 
 onPullRequest :: WebhookHandler Data.PullRequestEvent
-onPullRequest = webhookHandler \event ->
-  putTextLn ("PullRequstEvent: " <> show event)
+onPullRequest = webhookHandler
+  \(Data.PullRequestEvent action _number _pullRequest _repository _sender) -> do
+    putTextLn ("pullRequestAction: " <> show action)
 
+    case action of
+      Data.PullRequestOpened ->
+        pass
 
-onHealthCheck :: Servant.Handler Text
-onHealthCheck = pure "All good"
+      Data.PullRequestClosed ->
+        pass
+
+      Data.PullRequestSynchronized ->
+        pass
+
+      Data.PullRequestReopened ->
+        pass
+
+      Data.PullRequestAssigned ->
+        pass
+
+      Data.PullRequestUnassigned ->
+        pass
+
+      Data.PullRequestLabeled ->
+        pass
+
+      Data.PullRequestUnlabeled ->
+        pass
+
+      Data.PullRequestReviewRequested ->
+        pass
+
+      Data.PullRequestReviewRequestRemoved ->
+        pass
+
+      Data.PullRequestEdited ->
+        pass
 
 
 server :: Servant.Server WebhookApi
