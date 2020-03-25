@@ -25,6 +25,7 @@ where
 import Prelude hiding (trace)
 
 import Control.Algebra (Has)
+import Control.Carrier.Lift (Lift, runM, sendM)
 import Control.Carrier.Trace.Printing (Trace, runTrace, trace)
 import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
@@ -101,10 +102,10 @@ type WebhookApi =
     'Data.WebhookPullRequestEvent Data.PullRequestEvent
 
 
-type WebhookHandler event
+type WebhookHandler event m
    = Servant.RepoWebhookEvent
   -> ((), event)
-  -> Servant.Handler ()
+  -> m ()
 
 
 class ReflectWebhookEvent event where
@@ -120,10 +121,11 @@ instance ReflectWebhookEvent Data.PullRequestEvent where
 
 
 webhookHandler
-  :: forall event
-   . ReflectWebhookEvent event
-  => (event -> Servant.Handler ())
-  -> WebhookHandler event
+  :: forall sig m event
+   . Has (Lift Servant.Handler) sig m
+  => ReflectWebhookEvent event
+  => (event -> m ())
+  -> WebhookHandler event m
 webhookHandler handler repoWebhookEvent (_, event) =
   if repoWebhookEvent == reflectWebhookEvent @event then
     handler event
@@ -135,14 +137,16 @@ onHealthCheck :: Servant.Handler Text
 onHealthCheck = pure "All good"
 
 
-onPing :: WebhookHandler Data.PingEvent
-onPing = webhookHandler \_event -> putTextLn "Pong!"
+onPing :: Has (Lift Servant.Handler) sig m => WebhookHandler Data.PingEvent m
+onPing = webhookHandler \_event -> sendH (putTextLn "Pong!")
 
 
-onPullRequest :: WebhookHandler Data.PullRequestEvent
+onPullRequest
+  :: Has (Lift Servant.Handler) sig m
+  => WebhookHandler Data.PullRequestEvent m
 onPullRequest = webhookHandler
   \(Data.PullRequestEvent action _number _pullRequest _repository _sender) -> do
-    putTextLn ("pullRequestAction: " <> show action)
+    sendH (putTextLn ("pullRequestAction: " <> show action))
 
     case action of
       Data.PullRequestOpened ->
@@ -181,8 +185,12 @@ onPullRequest = webhookHandler
 
 server :: Servant.Server WebhookApi
 server = onHealthCheck
-    :<|> onPing
-    :<|> onPullRequest
+    :<|> (\x y -> runM (onPing x y) )
+    :<|> (\x y -> runM (onPullRequest x y))
+
+
+sendH :: Has (Lift Servant.Handler) sig m => Servant.Handler a -> m a
+sendH = sendM @Servant.Handler
 
 
 --------------------------------------------------------------------------------
