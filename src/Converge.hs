@@ -133,6 +133,18 @@ webhookHandler handler repoWebhookEvent (_, event) =
     pass
 
 
+sendH :: Has (Lift Servant.Handler) sig m => Servant.Handler a -> m a
+sendH = sendM
+
+
+runWebhookHandler
+  :: WebhookHandler event _m
+  -> Servant.RepoWebhookEvent
+  -> ((), event)
+  -> Servant.Handler ()
+runWebhookHandler handler x y = runM (handler x y)
+
+
 onHealthCheck :: Servant.Handler Text
 onHealthCheck = pure "All good"
 
@@ -187,18 +199,6 @@ server :: Servant.Server WebhookApi
 server = onHealthCheck
     :<|> runWebhookHandler onPing
     :<|> runWebhookHandler onPullRequest
-
-
-runWebhookHandler
-  :: WebhookHandler event _m
-  -> Servant.RepoWebhookEvent
-  -> ((), event)
-  -> Servant.Handler ()
-runWebhookHandler handler x y = runM (handler x y)
-
-
-sendH :: Has (Lift Servant.Handler) sig m => Servant.Handler a -> m a
-sendH = sendM @Servant.Handler
 
 
 --------------------------------------------------------------------------------
