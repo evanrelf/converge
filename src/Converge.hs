@@ -22,6 +22,7 @@ module Converge
   -- )
 where
 
+
 import Prelude hiding (trace)
 
 import Control.Algebra (Has)
