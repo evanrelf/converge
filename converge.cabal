@@ -64,6 +64,7 @@ library
   import: common
   hs-source-dirs: src
   exposed-modules:
+    Control.Carrier.Bread
     Control.Carrier.Log.IO
     Control.Effect.Bread
     Control.Effect.Log
