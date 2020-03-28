@@ -2,7 +2,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedWildCards #-}
@@ -10,6 +9,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
@@ -219,4 +219,4 @@ gitHubKey k = GitHubKey (Servant.gitHubKey k)
 
 
 instance Servant.HasContextEntry '[GitHubKey] (Servant.GitHubKey result) where
-    getContextEntry (GitHubKey x :. _) = x
+  getContextEntry (GitHubKey x :. _) = x
