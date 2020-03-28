@@ -65,6 +65,7 @@ library
   hs-source-dirs: src
   exposed-modules:
     Control.Carrier.Log.IO
+    Control.Effect.Bread
     Control.Effect.Log
     Converge
     GitHub.Carrier.Issue.Comments.IO
