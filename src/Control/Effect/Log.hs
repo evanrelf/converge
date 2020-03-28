@@ -16,7 +16,8 @@ import GHC.Generics (Generic1)
 
 
 data Severity
-  = Info
+  = Debug
+  | Info
   | Warn
   | Error
   deriving stock (Eq, Ord, Show)
