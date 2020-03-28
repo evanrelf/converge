@@ -30,6 +30,7 @@ import Control.Carrier.Lift (Lift, runM, sendM)
 import Control.Carrier.Trace.Printing (Trace, runTrace, trace)
 import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
+import qualified GitHub.Data.Webhooks.Events as Events
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
@@ -101,7 +102,10 @@ type WebhookApi =
 
   WebhookEndpoint "Pull request event from GitHub"
     'Data.WebhookPullRequestEvent Data.PullRequestEvent
+    :<|>
 
+  WebhookEndpoint "Push event from GitHub"
+    'Data.WebhookPushEvent Events.PushEvent
 
 
 class ReflectWebhookEvent event where
@@ -114,6 +118,10 @@ instance ReflectWebhookEvent Data.PingEvent where
 
 instance ReflectWebhookEvent Data.PullRequestEvent where
   reflectWebhookEvent = Data.WebhookPullRequestEvent
+
+
+instance ReflectWebhookEvent Events.PushEvent where
+  reflectWebhookEvent = Data.WebhookPushEvent
 
 
 wrapWebhookHandler
@@ -198,11 +206,30 @@ onPullRequest
       Data.PullRequestEdited ->
         pass
 
+onPush :: Has (Lift Servant.Handler) sig m => Events.PushEvent -> m ()
+onPush
+  ( Events.PushEvent
+    _ref
+    _headSha
+    _beforeSha
+    _created
+    _deleted
+    _forced
+    _baseRef
+    _compareUrl
+    _commits
+    _headCommit
+    _repository
+    _organization
+    _sender
+  ) = do
+  sendH (putTextLn "Push event")
 
 server :: Servant.Server WebhookApi
 server = onHealthCheck
     :<|> runWebhookHandler onPing
     :<|> runWebhookHandler onPullRequest
+    :<|> runWebhookHandler onPush
 
 
 --------------------------------------------------------------------------------
