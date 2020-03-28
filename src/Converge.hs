@@ -156,12 +156,16 @@ onHealthCheck :: Servant.Handler Text
 onHealthCheck = pure "All good"
 
 
-onPing :: Has (Lift Servant.Handler) sig m => Data.PingEvent -> m ()
-onPing _event = sendH (putTextLn "Pong!")
+onPing
+  :: Has (Lift Servant.Handler) sig m
+  => Has Log sig m
+  => Data.PingEvent -> m ()
+onPing _event = log Debug "Pong!"
 
 
 onPullRequest
   :: Has (Lift Servant.Handler) sig m
+  => Has Log sig m
   => Data.PullRequestEvent -> m ()
 onPullRequest
   ( Data.PullRequestEvent
@@ -171,42 +175,57 @@ onPullRequest
     _repository
     _sender
   ) = do
+  case action of
+    Data.PullRequestOpened -> do
+      log Debug "Pull request opened"
+      pass
 
-    case action of
-      Data.PullRequestOpened ->
-        pass
+    Data.PullRequestClosed -> do
+      log Debug "Pull request closed"
+      pass
 
-      Data.PullRequestClosed ->
-        pass
+    Data.PullRequestSynchronized -> do
+      log Debug "Pull request synchronized"
+      pass
 
-      Data.PullRequestSynchronized ->
-        pass
+    Data.PullRequestReopened -> do
+      log Debug "Pull request reopened"
+      pass
 
-      Data.PullRequestReopened ->
-        pass
+    Data.PullRequestAssigned -> do
+      log Debug "Pull request assigned"
+      pass
 
-      Data.PullRequestAssigned ->
-        pass
+    Data.PullRequestUnassigned -> do
+      log Debug "Pull request unassigned"
+      pass
 
-      Data.PullRequestUnassigned ->
-        pass
+    Data.PullRequestLabeled -> do
+      log Debug "Pull request labeled"
+      pass
 
-      Data.PullRequestLabeled ->
-        pass
+    Data.PullRequestUnlabeled -> do
+      log Debug "Pull request unlabeled"
+      pass
 
-      Data.PullRequestUnlabeled ->
-        pass
+    Data.PullRequestReviewRequested -> do
+      log Debug "Pull request review requested"
+      pass
 
-      Data.PullRequestReviewRequested ->
-        pass
+    Data.PullRequestReviewRequestRemoved -> do
+      log Debug "Pull request review request removed"
+      pass
 
-      Data.PullRequestReviewRequestRemoved ->
-        pass
+    Data.PullRequestEdited -> do
+      log Debug "Pull request edited"
+      pass
 
-      Data.PullRequestEdited ->
-        pass
 
-onPush :: Has (Lift Servant.Handler) sig m => Events.PushEvent -> m ()
+onPush
+  :: Has (Lift Servant.Handler) sig m
+  => Has Log sig m
+  => Events.PushEvent
+  -> m ()
 onPush
   ( Events.PushEvent
     _ref
@@ -223,13 +242,14 @@ onPush
     _organization
     _sender
   ) = do
-  sendH (putTextLn "Push event")
+  log Debug "Push event"
+
 
 server :: Servant.Server WebhookApi
 server = onHealthCheck
-    :<|> runWebhookHandler onPing
-    :<|> runWebhookHandler onPullRequest
-    :<|> runWebhookHandler onPush
+    :<|> runWebhookHandler (runLog . onPing)
+    :<|> runWebhookHandler (runLog . onPullRequest)
+    :<|> runWebhookHandler (runLog . onPush)
 
 
 --------------------------------------------------------------------------------
