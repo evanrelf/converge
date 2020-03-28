@@ -103,11 +103,6 @@ type WebhookApi =
     'Data.WebhookPullRequestEvent Data.PullRequestEvent
 
 
-type WebhookHandler event m
-   = Servant.RepoWebhookEvent
-  -> ((), event)
-  -> m ()
-
 
 class ReflectWebhookEvent event where
   reflectWebhookEvent :: Servant.RepoWebhookEvent
@@ -121,13 +116,15 @@ instance ReflectWebhookEvent Data.PullRequestEvent where
   reflectWebhookEvent = Data.WebhookPullRequestEvent
 
 
-webhookHandler
+wrapWebhookHandler
   :: forall sig m event
    . Has (Lift Servant.Handler) sig m
   => ReflectWebhookEvent event
   => (event -> m ())
-  -> WebhookHandler event m
-webhookHandler handler repoWebhookEvent (_, event) =
+  -> Servant.RepoWebhookEvent
+  -> ((), event)
+  -> m ()
+wrapWebhookHandler handler repoWebhookEvent ((), event) =
   if repoWebhookEvent == reflectWebhookEvent @event then
     handler event
   else
@@ -139,27 +136,33 @@ sendH = sendM
 
 
 runWebhookHandler
-  :: WebhookHandler event _m
+  :: ReflectWebhookEvent event
+  => (event -> _m ())
   -> Servant.RepoWebhookEvent
   -> ((), event)
   -> Servant.Handler ()
-runWebhookHandler handler x y = runM (handler x y)
+runWebhookHandler handler x y = runM (wrapWebhookHandler handler x y)
 
 
 onHealthCheck :: Servant.Handler Text
 onHealthCheck = pure "All good"
 
 
-onPing :: Has (Lift Servant.Handler) sig m => WebhookHandler Data.PingEvent m
-onPing = webhookHandler \_event -> sendH (putTextLn "Pong!")
+onPing :: Has (Lift Servant.Handler) sig m => Data.PingEvent -> m ()
+onPing _event = sendH (putTextLn "Pong!")
 
 
 onPullRequest
   :: Has (Lift Servant.Handler) sig m
-  => WebhookHandler Data.PullRequestEvent m
-onPullRequest = webhookHandler
-  \(Data.PullRequestEvent action _number _pullRequest _repository _sender) -> do
-    sendH (putTextLn ("pullRequestAction: " <> show action))
+  => Data.PullRequestEvent -> m ()
+onPullRequest
+  ( Data.PullRequestEvent
+    action
+    _number
+    _pullRequest
+    _repository
+    _sender
+  ) = do
 
     case action of
       Data.PullRequestOpened ->
