@@ -11,7 +11,7 @@
 
 module Control.Carrier.Log.IO
   ( LogIOC (..)
-  , runLogIO
+  , runLog
   -- Re-exports
   , module Control.Effect.Log
   )
@@ -24,8 +24,8 @@ import qualified Data.Text.IO as Text
 import Control.Effect.Log
 
 
-runLogIO :: LogIOC m a -> m a
-runLogIO (LogIOC m) = m
+runLog :: LogIOC m a -> m a
+runLog (LogIOC m) = m
 
 
 newtype LogIOC m a = LogIOC (m a)

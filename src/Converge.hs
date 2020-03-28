@@ -35,7 +35,7 @@ import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
 
-import Control.Carrier.Log.IO (Log, Severity (..), log, runLogIO)
+import Control.Carrier.Log.IO (Log, Severity (..), log, runLog)
 import GitHub.Carrier.Issue.Comments.IO
   ( IssueComments
   , createComment
@@ -71,7 +71,7 @@ test token = do
   program
     & runIssueCommentsIO auth owner repo
     & runTrace
-    & runLogIO
+    & runLog
 
 
 --------------------------------------------------------------------------------
