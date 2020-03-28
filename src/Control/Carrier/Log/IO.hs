@@ -42,11 +42,9 @@ instance
   alg (L (Log severity message k)) = do
     let severityText =
           case severity of
-            Info ->
-              "[ INFO  ]"
-            Warn ->
-              "[ WARN  ]"
-            Error ->
-              "[ ERROR ]"
-    liftIO (Text.hPutStrLn stderr (severityText <> " " <> message))
+            Debug -> "DEBUG"
+            Info  -> "INFO "
+            Warn  -> "WARN "
+            Error -> "ERROR"
+    liftIO (Text.hPutStrLn stderr ("[ " <> severityText <> " ] " <> message))
     k
