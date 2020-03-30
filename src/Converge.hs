@@ -28,6 +28,8 @@ import Prelude hiding (trace)
 import Control.Algebra (Has)
 import Control.Carrier.Lift (Lift, runM, sendM)
 import Control.Carrier.Trace.Printing (Trace, runTrace, trace)
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Text as Aeson
 import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
@@ -106,6 +108,12 @@ type WebhookApi =
 
   WebhookEndpoint "Push event from GitHub"
     'Data.WebhookPushEvent Events.PushEvent
+    :<|>
+
+  "webhook"
+    :> Servant.Summary "Unknown request"
+    :> Servant.ReqBody '[Servant.JSON] Aeson.Value
+    :> Servant.Post '[Servant.JSON] ()
 
 
 class ReflectWebhookEvent event where
@@ -246,11 +254,21 @@ onPush
   log Debug "Push event"
 
 
+onUnknown
+  :: Has (Lift Servant.Handler) sig m
+  => Has Log sig m
+  => Aeson.Value
+  -> m ()
+onUnknown value = do
+  log Vomit ("Unknown request: " <> toText (Aeson.encodeToLazyText value))
+
+
 server :: Servant.Server WebhookApi
 server = onHealthCheck
     :<|> runWebhookHandler (runLog verbosity . onPing)
     :<|> runWebhookHandler (runLog verbosity . onPullRequest)
     :<|> runWebhookHandler (runLog verbosity . onPush)
+    :<|> runM . runLog verbosity . onUnknown
   where verbosity = Vomit
 
 

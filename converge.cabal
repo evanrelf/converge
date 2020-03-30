@@ -73,6 +73,7 @@ library
     GitHub.Effect.Issue.Comments
     GitHub.Effect.PullRequest.Comments
   build-depends:
+    , aeson
     , fused-effects ^>= 1.0.0.0
     , generic-optics
     , github
