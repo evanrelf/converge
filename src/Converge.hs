@@ -89,7 +89,7 @@ type WebhookEndpoint
     :> Servant.Summary summary
     :> Servant.GitHubEvent '[webhook]
     :> Servant.GitHubSignedReqBody '[Servant.JSON] event
-    :> Servant.Post '[Servant.JSON] ()
+    :> Servant.Post '[Servant.JSON] Servant.NoContent
 
 
 type WebhookApi =
@@ -117,7 +117,7 @@ type WebhookApi =
   "webhook"
     :> Servant.Summary "Unknown request"
     :> Servant.ReqBody '[Servant.JSON] Aeson.Value
-    :> Servant.Post '[Servant.JSON] ()
+    :> Servant.Post '[Servant.JSON] Servant.NoContent
 
 
 class ReflectWebhookEvent event where
@@ -164,8 +164,9 @@ runWebhookHandler
   => (event -> _m ())
   -> Servant.RepoWebhookEvent
   -> ((), event)
-  -> Servant.Handler ()
-runWebhookHandler handler x y = runM (wrapWebhookHandler handler x y)
+  -> Servant.Handler Servant.NoContent
+runWebhookHandler handler x y =
+  runM (wrapWebhookHandler handler x y) *> pure Servant.NoContent
 
 
 onHealthCheck :: Servant.Handler Text
@@ -281,9 +282,10 @@ onUnknown
   :: Has (Lift Servant.Handler) sig m
   => Has Log sig m
   => Aeson.Value
-  -> m ()
+  -> m Servant.NoContent
 onUnknown value = do
   log Vomit ("Unknown request: " <> toText (Aeson.encodeToLazyText value))
+  pure Servant.NoContent
 
 
 server :: Servant.Server WebhookApi
