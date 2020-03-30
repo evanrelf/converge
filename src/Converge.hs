@@ -106,6 +106,10 @@ type WebhookApi =
     'Data.WebhookPullRequestEvent Events.PullRequestEvent
     :<|>
 
+  WebhookEndpoint "Issue comment event from GitHub"
+    'Data.WebhookIssueCommentEvent Events.IssueCommentEvent
+    :<|>
+
   WebhookEndpoint "Push event from GitHub"
     'Data.WebhookPushEvent Events.PushEvent
     :<|>
@@ -126,6 +130,10 @@ instance ReflectWebhookEvent Data.PingEvent where
 
 instance ReflectWebhookEvent Events.PullRequestEvent where
   reflectWebhookEvent = Data.WebhookPullRequestEvent
+
+
+instance ReflectWebhookEvent Events.IssueCommentEvent where
+  reflectWebhookEvent = Data.WebhookIssueCommentEvent
 
 
 instance ReflectWebhookEvent Events.PushEvent where
@@ -230,6 +238,21 @@ onPullRequest
       pass
 
 
+onIssueComment
+  :: Has (Lift Servant.Handler) sig m
+  => Has Log sig m
+  => Events.IssueCommentEvent -> m ()
+onIssueComment
+  ( Events.IssueCommentEvent
+    _action
+    _issue
+    _payload
+    _repo
+    _sender
+  ) = do
+  log Debug "Issue comment event"
+
+
 onPush
   :: Has (Lift Servant.Handler) sig m
   => Has Log sig m
@@ -267,6 +290,7 @@ server :: Servant.Server WebhookApi
 server = onHealthCheck
     :<|> runWebhookHandler (runLog verbosity . onPing)
     :<|> runWebhookHandler (runLog verbosity . onPullRequest)
+    :<|> runWebhookHandler (runLog verbosity . onIssueComment)
     :<|> runWebhookHandler (runLog verbosity . onPush)
     :<|> runM . runLog verbosity . onUnknown
   where verbosity = Vomit
