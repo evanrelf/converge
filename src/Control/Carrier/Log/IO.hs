@@ -24,7 +24,7 @@ import qualified Data.Text.IO as Text
 import Control.Effect.Log
 
 
-runLog :: Verbosity -> _m a -> m a
+runLog :: MonadIO m => Verbosity -> _m a -> m a
 runLog verbosity (LogIOC m) = runReader verbosity m
 
 
