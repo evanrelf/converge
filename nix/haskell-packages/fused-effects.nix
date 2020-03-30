@@ -2,10 +2,10 @@
 , inspection-testing, markdown-unlit, mtl, stdenv, tasty
 , tasty-hedgehog, tasty-hunit, transformers
 }:
-mkDerivation ({
+mkDerivation {
   pname = "fused-effects";
-  version = "1.0.0.1";
-  sha256 = "2fbde9a4ea12ac00f6c7d1464676ffaffcd233938ff7357c744d394722aa21ec";
+  version = "1.0.2.0";
+  sha256 = "dd7801faa03c0d22e2826b840091cced7080e8561aa8b6806cf68dea48a9c837";
   libraryHaskellDepends = [ base transformers ];
   testHaskellDepends = [
     base containers hedgehog hedgehog-fn inspection-testing mtl tasty
@@ -16,7 +16,4 @@ mkDerivation ({
   homepage = "https://github.com/fused-effects/fused-effects";
   description = "A fast, flexible, fused effect system";
   license = stdenv.lib.licenses.bsd3;
-} // {
-  # Project-specific modifications
-  doCheck = false;
-})
+}
