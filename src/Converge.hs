@@ -140,33 +140,20 @@ instance ReflectWebhookEvent Events.PushEvent where
   reflectWebhookEvent = Data.WebhookPushEvent
 
 
-wrapWebhookHandler
-  :: forall sig m event
-   . Has (Lift Servant.Handler) sig m
-  => ReflectWebhookEvent event
-  => (event -> m ())
+runWebhookHandler
+  :: forall event
+   . ReflectWebhookEvent event
+  => (event -> Servant.Handler ())
   -> Servant.RepoWebhookEvent
   -> ((), event)
-  -> m ()
-wrapWebhookHandler handler repoWebhookEvent ((), event) =
-  if repoWebhookEvent == reflectWebhookEvent @event then
-    handler event
-  else
-    pass
+  -> Servant.Handler Servant.NoContent
+runWebhookHandler handler repoWebhookEvent ((), event) = do
+  when (repoWebhookEvent == reflectWebhookEvent @event) (handler event)
+  pure Servant.NoContent
 
 
 sendH :: Has (Lift Servant.Handler) sig m => Servant.Handler a -> m a
 sendH = sendM
-
-
-runWebhookHandler
-  :: ReflectWebhookEvent event
-  => (event -> _m ())
-  -> Servant.RepoWebhookEvent
-  -> ((), event)
-  -> Servant.Handler Servant.NoContent
-runWebhookHandler handler x y =
-  runM (wrapWebhookHandler handler x y) *> pure Servant.NoContent
 
 
 onHealthCheck :: Servant.Handler Text
@@ -290,10 +277,10 @@ onUnknown value = do
 
 server :: Servant.Server WebhookApi
 server = onHealthCheck
-    :<|> runWebhookHandler (runLog verbosity . onPing)
-    :<|> runWebhookHandler (runLog verbosity . onPullRequest)
-    :<|> runWebhookHandler (runLog verbosity . onIssueComment)
-    :<|> runWebhookHandler (runLog verbosity . onPush)
+    :<|> runWebhookHandler (runM . runLog verbosity . onPing)
+    :<|> runWebhookHandler (runM . runLog verbosity . onPullRequest)
+    :<|> runWebhookHandler (runM . runLog verbosity . onIssueComment)
+    :<|> runWebhookHandler (runM . runLog verbosity . onPush)
     :<|> runM . runLog verbosity . onUnknown
   where verbosity = Vomit
 
