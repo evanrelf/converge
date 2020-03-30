@@ -101,7 +101,7 @@ type WebhookApi =
     :<|>
 
   WebhookEndpoint "Pull request event from GitHub"
-    'Data.WebhookPullRequestEvent Data.PullRequestEvent
+    'Data.WebhookPullRequestEvent Events.PullRequestEvent
     :<|>
 
   WebhookEndpoint "Push event from GitHub"
@@ -116,7 +116,7 @@ instance ReflectWebhookEvent Data.PingEvent where
   reflectWebhookEvent = Data.WebhookPingEvent
 
 
-instance ReflectWebhookEvent Data.PullRequestEvent where
+instance ReflectWebhookEvent Events.PullRequestEvent where
   reflectWebhookEvent = Data.WebhookPullRequestEvent
 
 
@@ -166,58 +166,59 @@ onPing _event = log Debug "Pong!"
 onPullRequest
   :: Has (Lift Servant.Handler) sig m
   => Has Log sig m
-  => Data.PullRequestEvent -> m ()
+  => Events.PullRequestEvent -> m ()
 onPullRequest
-  ( Data.PullRequestEvent
+  ( Events.PullRequestEvent
     action
     _number
-    _pullRequest
-    _repository
+    _payload
+    _repo
     _sender
+    _installationId
   ) = do
   case action of
-    Data.PullRequestOpened -> do
-      log Debug "Pull request opened"
-      pass
-
-    Data.PullRequestClosed -> do
-      log Debug "Pull request closed"
-      pass
-
-    Data.PullRequestSynchronized -> do
-      log Debug "Pull request synchronized"
-      pass
-
-    Data.PullRequestReopened -> do
-      log Debug "Pull request reopened"
-      pass
-
-    Data.PullRequestAssigned -> do
+    Events.PullRequestAssignedAction -> do
       log Debug "Pull request assigned"
       pass
 
-    Data.PullRequestUnassigned -> do
+    Events.PullRequestUnassignedAction -> do
       log Debug "Pull request unassigned"
       pass
 
-    Data.PullRequestLabeled -> do
-      log Debug "Pull request labeled"
-      pass
-
-    Data.PullRequestUnlabeled -> do
-      log Debug "Pull request unlabeled"
-      pass
-
-    Data.PullRequestReviewRequested -> do
+    Events.PullRequestReviewRequestedAction -> do
       log Debug "Pull request review requested"
       pass
 
-    Data.PullRequestReviewRequestRemoved -> do
+    Events.PullRequestReviewRequestRemovedAction -> do
       log Debug "Pull request review request removed"
       pass
 
-    Data.PullRequestEdited -> do
+    Events.PullRequestLabeledAction -> do
+      log Debug "Pull request labeled"
+      pass
+
+    Events.PullRequestUnlabeledAction -> do
+      log Debug "Pull request unlabeled"
+      pass
+
+    Events.PullRequestOpenedAction -> do
+      log Debug "Pull request opened"
+      pass
+
+    Events.PullRequestEditedAction -> do
       log Debug "Pull request edited"
+      pass
+
+    Events.PullRequestClosedAction -> do
+      log Debug "Pull request closed"
+      pass
+
+    Events.PullRequestReopenedAction -> do
+      log Debug "Pull request reopened"
+      pass
+
+    Events.PullRequestActionOther _other -> do
+      log Debug "Pull request action other"
       pass
 
 
