@@ -7,6 +7,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
@@ -73,13 +74,10 @@ test token = do
 --------------------------------------------------------------------------------
 
 
-type WebhookEndpoint
-  (summary :: Symbol)
-  (webhook :: Servant.RepoWebhookEvent)
-  (event :: Type) =
+type WebhookEndpoint (summary :: Symbol) (event :: Type) =
   "webhook"
     :> Servant.Summary summary
-    :> Servant.GitHubEvent '[webhook]
+    :> Servant.GitHubEvent '[ToWebhookEvent event]
     :> Servant.GitHubSignedReqBody '[Servant.JSON] event
     :> Servant.Post '[Servant.JSON] Servant.NoContent
 
@@ -90,20 +88,24 @@ type WebhookApi =
     :> Servant.Get '[Servant.PlainText] Text
     :<|>
 
-  WebhookEndpoint "Ping from GitHub"
-    'Data.WebhookPingEvent Data.PingEvent
+  WebhookEndpoint
+    "Ping from GitHub"
+    Data.PingEvent
     :<|>
 
-  WebhookEndpoint "Pull request event from GitHub"
-    'Data.WebhookPullRequestEvent Events.PullRequestEvent
+  WebhookEndpoint
+    "Pull request event from GitHub"
+    Events.PullRequestEvent
     :<|>
 
-  WebhookEndpoint "Issue comment event from GitHub"
-    'Data.WebhookIssueCommentEvent Events.IssueCommentEvent
+  WebhookEndpoint
+    "Issue comment event from GitHub"
+    Events.IssueCommentEvent
     :<|>
 
-  WebhookEndpoint "Push event from GitHub"
-    'Data.WebhookPushEvent Events.PushEvent
+  WebhookEndpoint
+    "Push event from GitHub"
+    Events.PushEvent
     :<|>
 
   "webhook"
@@ -112,23 +114,28 @@ type WebhookApi =
     :> Servant.Post '[Servant.JSON] Servant.NoContent
 
 
-class ReflectWebhookEvent event where
+class ReflectWebhookEvent (event :: Type) where
+  type ToWebhookEvent event :: Servant.RepoWebhookEvent
   reflectWebhookEvent :: Servant.RepoWebhookEvent
 
 
 instance ReflectWebhookEvent Data.PingEvent where
+  type ToWebhookEvent Data.PingEvent = 'Data.WebhookPingEvent
   reflectWebhookEvent = Data.WebhookPingEvent
 
 
 instance ReflectWebhookEvent Events.PullRequestEvent where
+  type ToWebhookEvent Events.PullRequestEvent = 'Data.WebhookPullRequestEvent
   reflectWebhookEvent = Data.WebhookPullRequestEvent
 
 
 instance ReflectWebhookEvent Events.IssueCommentEvent where
+  type ToWebhookEvent Events.IssueCommentEvent = 'Data.WebhookIssueCommentEvent
   reflectWebhookEvent = Data.WebhookIssueCommentEvent
 
 
 instance ReflectWebhookEvent Events.PushEvent where
+  type ToWebhookEvent Events.PushEvent = 'Data.WebhookPushEvent
   reflectWebhookEvent = Data.WebhookPushEvent
 
 
