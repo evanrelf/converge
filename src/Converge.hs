@@ -35,7 +35,7 @@ import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
 
-import Control.Carrier.Log.IO (Log, Severity (..), log, runLog)
+import Control.Carrier.Log.IO (Log, Verbosity (..), log, runLog)
 import GitHub.Carrier.Issue.Comments.IO
   ( IssueComments
   , createComment
@@ -71,7 +71,7 @@ test token = do
   program
     & runIssueCommentsIO auth owner repo
     & runTrace
-    & runLog
+    & runLog Vomit
 
 
 --------------------------------------------------------------------------------
@@ -247,9 +247,10 @@ onPush
 
 server :: Servant.Server WebhookApi
 server = onHealthCheck
-    :<|> runWebhookHandler (runLog . onPing)
-    :<|> runWebhookHandler (runLog . onPullRequest)
-    :<|> runWebhookHandler (runLog . onPush)
+    :<|> runWebhookHandler (runLog verbosity . onPing)
+    :<|> runWebhookHandler (runLog verbosity . onPullRequest)
+    :<|> runWebhookHandler (runLog verbosity . onPush)
+  where verbosity = Vomit
 
 
 --------------------------------------------------------------------------------
