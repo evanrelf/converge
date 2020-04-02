@@ -108,6 +108,11 @@ type WebhookApi =
     Events.PushEvent
     :<|>
 
+  WebhookEndpoint
+    "Check suite event from GitHub"
+    Events.CheckSuiteEvent
+    :<|>
+
   "webhook"
     :> Servant.Summary "Unknown request"
     :> Servant.ReqBody '[Servant.JSON] Aeson.Value
@@ -137,6 +142,11 @@ instance ReflectWebhookEvent Events.IssueCommentEvent where
 instance ReflectWebhookEvent Events.PushEvent where
   type ToWebhookEvent Events.PushEvent = 'Data.WebhookPushEvent
   reflectWebhookEvent = Data.WebhookPushEvent
+
+
+instance ReflectWebhookEvent Events.CheckSuiteEvent where
+  type ToWebhookEvent Events.CheckSuiteEvent = 'Data.WebhookCheckSuiteEvent
+  reflectWebhookEvent = Data.WebhookCheckSuiteEvent
 
 
 runWebhookHandler
@@ -264,6 +274,23 @@ onPush
   log Debug "Push event"
 
 
+onCheckSuite
+  :: Has (Lift Servant.Handler) sig m
+  => Has Log sig m
+  => Events.CheckSuiteEvent
+  -> m ()
+onCheckSuite
+  ( Events.CheckSuiteEvent
+    _action
+    _checkSuite
+    _repository
+    _organization
+    _sender
+    _installation
+  ) = do
+  log Debug "Check suite event"
+
+
 onUnknown
   :: Has (Lift Servant.Handler) sig m
   => Has Log sig m
@@ -280,6 +307,7 @@ server = onHealthCheck
     :<|> runWebhookHandler (runM . runLog verbosity . onPullRequest)
     :<|> runWebhookHandler (runM . runLog verbosity . onIssueComment)
     :<|> runWebhookHandler (runM . runLog verbosity . onPush)
+    :<|> runWebhookHandler (runM . runLog verbosity . onCheckSuite)
     :<|> runM . runLog verbosity . onUnknown
   where verbosity = Vomit
 
