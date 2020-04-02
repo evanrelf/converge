@@ -192,13 +192,24 @@ onIssueComment
   => Events.IssueCommentEvent -> m ()
 onIssueComment
   ( Events.IssueCommentEvent
-    _action
+    action
     _issue
     _payload
     _repo
     _sender
   ) = do
-  log Debug "Issue comment event"
+  case action of
+    Events.IssueCommentCreatedAction -> do
+      log Debug "Issue comment created"
+
+    Events.IssueCommentEditedAction -> do
+      log Debug "Issue comment edited"
+
+    Events.IssueCommentDeletedAction ->
+      log Debug "Issue comment deleted"
+
+    Events.IssueCommentActionOther other -> do
+      log Debug ("Unknown issue comment action '" <> other <> "'")
 
 
 onPush
