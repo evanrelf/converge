@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
@@ -21,9 +22,11 @@ import Control.Algebra (Has)
 import Control.Carrier.Lift (Lift, runM, sendM)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
+import Data.String.Interpolate (i)
 import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
+import qualified GitHub.Data.Webhooks.Payload as Payload
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
@@ -145,7 +148,7 @@ onPullRequest
 onPullRequest
   ( Events.PullRequestEvent
     action
-    _number
+    number
     _payload
     _repo
     _sender
@@ -153,37 +156,37 @@ onPullRequest
   ) = do
   case action of
     Events.PullRequestAssignedAction -> do
-      log Debug "Pull request assigned"
+      log Debug [i|Pull request ##{number}: assigned|]
 
     Events.PullRequestUnassignedAction -> do
-      log Debug "Pull request unassigned"
+      log Debug [i|Pull request ##{number}: unassigned|]
 
     Events.PullRequestReviewRequestedAction -> do
-      log Debug "Pull request review requested"
+      log Debug [i|Pull request ##{number}: review requested|]
 
     Events.PullRequestReviewRequestRemovedAction -> do
-      log Debug "Pull request review request removed"
+      log Debug [i|Pull request ##{number}: review request removed|]
 
     Events.PullRequestLabeledAction -> do
-      log Debug "Pull request labeled"
+      log Debug [i|Pull request ##{number}: labeled|]
 
     Events.PullRequestUnlabeledAction -> do
-      log Debug "Pull request unlabeled"
+      log Debug [i|Pull request ##{number}: unlabeled|]
 
     Events.PullRequestOpenedAction -> do
-      log Debug "Pull request opened"
+      log Debug [i|Pull request ##{number}: opened|]
 
     Events.PullRequestEditedAction -> do
-      log Debug "Pull request edited"
+      log Debug [i|Pull request ##{number}: edited|]
 
     Events.PullRequestClosedAction -> do
-      log Debug "Pull request closed"
+      log Debug [i|Pull request ##{number}: closed|]
 
     Events.PullRequestReopenedAction -> do
-      log Debug "Pull request reopened"
+      log Debug [i|Pull request ##{number}: reopened|]
 
     Events.PullRequestActionOther other -> do
-      log Debug ("Unknown pull request action '" <> other <> "'")
+      log Debug [i|Pull request ##{number}: unknown action '#{other}'|]
 
 
 onIssueComment
@@ -193,23 +196,25 @@ onIssueComment
 onIssueComment
   ( Events.IssueCommentEvent
     action
-    _issue
+    issue
     _payload
     _repo
     _sender
   ) = do
+  let number = Payload.whIssueNumber issue
+
   case action of
     Events.IssueCommentCreatedAction -> do
-      log Debug "Issue comment created"
+      log Debug [i|Issue ##{number}: comment created|]
 
     Events.IssueCommentEditedAction -> do
-      log Debug "Issue comment edited"
+      log Debug [i|Issue ##{number}: comment edited|]
 
     Events.IssueCommentDeletedAction ->
-      log Debug "Issue comment deleted"
+      log Debug [i|Issue ##{number}: comment deleted|]
 
     Events.IssueCommentActionOther other -> do
-      log Debug ("Unknown issue comment action '" <> other <> "'")
+      log Debug [i|Issue ##{number}: unknown comment action '#{other}'|]
 
 
 onPush
@@ -252,16 +257,16 @@ onCheckSuite
   ) = do
   case action of
     Events.CheckSuiteEventActionCompleted -> do
-      log Debug "Check suite completed"
+      log Debug "Check suite: completed"
 
     Events.CheckSuiteEventActionRequested -> do
-      log Debug "Check suite requested"
+      log Debug "Check suite: requested"
 
     Events.CheckSuiteEventActionRerequested -> do
-      log Debug "Check suite re-requested"
+      log Debug "Check suite: re-requested"
 
     Events.CheckSuiteEventActionOther other -> do
-      log Debug ("Unknown check suite action '" <> other <> "'")
+      log Debug [i|"Check suite: Unknown action '#{other}'|]
 
 
 onUnknown
