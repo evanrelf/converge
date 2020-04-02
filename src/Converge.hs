@@ -20,7 +20,6 @@ import Prelude hiding (trace)
 
 import Control.Algebra (Has)
 import Control.Carrier.Lift (Lift, runM, sendM)
-import Control.Carrier.Trace.Printing (Trace, runTrace, trace)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
 import GHC.TypeLits (Symbol)
@@ -31,42 +30,6 @@ import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
 
 import Control.Carrier.Log.IO (Log, Verbosity (..), log, runLog)
-import GitHub.Carrier.Issue.Comments.IO
-  ( IssueComments
-  , createComment
-  , runIssueCommentsIO
-  )
-
-
---------------------------------------------------------------------------------
--- Scratchpad
---------------------------------------------------------------------------------
-
-
-program
-  :: Has IssueComments sig m
-  => Has Log sig m
-  => Has Trace sig m
-  => m ()
-program = do
-  let issueNumber = Data.IssueNumber 1
-  let body = "Hello world!"
-  log Info "Creating comment"
-  result <- createComment issueNumber body
-  log Info "Tracing result"
-  trace (show result)
-  log Info "Finished"
-
-
-test :: ByteString -> IO (Either Data.Error ())
-test token = do
-  let auth = Data.OAuth token
-  let owner = "evanrelf"
-  let repo = "github-apps-test"
-  program
-    & runIssueCommentsIO auth owner repo
-    & runTrace
-    & runLog Vomit
 
 
 --------------------------------------------------------------------------------
