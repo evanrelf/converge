@@ -81,6 +81,7 @@ library
     , optics
     , servant-github-webhook
     , servant-server
+    , string-interpolate
     , text
     , time
     , vector
