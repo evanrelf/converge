@@ -2,7 +2,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -155,47 +154,36 @@ onPullRequest
   case action of
     Events.PullRequestAssignedAction -> do
       log Debug "Pull request assigned"
-      pass
 
     Events.PullRequestUnassignedAction -> do
       log Debug "Pull request unassigned"
-      pass
 
     Events.PullRequestReviewRequestedAction -> do
       log Debug "Pull request review requested"
-      pass
 
     Events.PullRequestReviewRequestRemovedAction -> do
       log Debug "Pull request review request removed"
-      pass
 
     Events.PullRequestLabeledAction -> do
       log Debug "Pull request labeled"
-      pass
 
     Events.PullRequestUnlabeledAction -> do
       log Debug "Pull request unlabeled"
-      pass
 
     Events.PullRequestOpenedAction -> do
       log Debug "Pull request opened"
-      pass
 
     Events.PullRequestEditedAction -> do
       log Debug "Pull request edited"
-      pass
 
     Events.PullRequestClosedAction -> do
       log Debug "Pull request closed"
-      pass
 
     Events.PullRequestReopenedAction -> do
       log Debug "Pull request reopened"
-      pass
 
     Events.PullRequestActionOther _other -> do
       log Debug "Pull request action other"
-      pass
 
 
 onIssueComment
