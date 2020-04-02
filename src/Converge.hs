@@ -243,14 +243,25 @@ onCheckSuite
   -> m ()
 onCheckSuite
   ( Events.CheckSuiteEvent
-    _action
+    action
     _checkSuite
     _repository
     _organization
     _sender
     _installation
   ) = do
-  log Debug "Check suite event"
+  case action of
+    Events.CheckSuiteEventActionCompleted -> do
+      log Debug "Check suite completed"
+
+    Events.CheckSuiteEventActionRequested -> do
+      log Debug "Check suite requested"
+
+    Events.CheckSuiteEventActionRerequested -> do
+      log Debug "Check suite re-requested"
+
+    Events.CheckSuiteEventActionOther other -> do
+      log Debug ("Unknown check suite action '" <> other <> "'")
 
 
 onUnknown
