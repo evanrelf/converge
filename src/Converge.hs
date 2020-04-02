@@ -182,8 +182,8 @@ onPullRequest
     Events.PullRequestReopenedAction -> do
       log Debug "Pull request reopened"
 
-    Events.PullRequestActionOther _other -> do
-      log Debug "Pull request action other"
+    Events.PullRequestActionOther other -> do
+      log Debug ("Unknown pull request action '" <> other <> "'")
 
 
 onIssueComment
