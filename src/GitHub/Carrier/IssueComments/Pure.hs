@@ -19,12 +19,12 @@
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 
 
-module GitHub.Carrier.Issue.Comments.Pure
+module GitHub.Carrier.IssueComments.Pure
   ( IssueCommentsState (..)
   , IssueCommentsPureC (..)
-  , runIssueCommentsPure
+  , runIssueComments
   -- Re-exports
-  , module GitHub.Effect.Issue.Comments
+  , module GitHub.Effect.IssueComments
   )
 where
 
@@ -39,7 +39,7 @@ import qualified GitHub.Data as Data
 import Optics (view)
 import qualified Relude.Extra.Map as Map
 
-import GitHub.Effect.Issue.Comments
+import GitHub.Effect.IssueComments
 
 
 data IssueCommentsState = IssueCommentsState
@@ -68,12 +68,12 @@ data Error
   deriving stock (Eq, Show)
 
 
-runIssueCommentsPure
+runIssueComments
   :: Functor m
   => IssueCommentsState
   -> _m a
   -> m (IssueCommentsState, Either Error a)
-runIssueCommentsPure initialState (IssueCommentsPureC m)
+runIssueComments initialState (IssueCommentsPureC m)
   = runState initialState
   . runThrow
   . evalFresh 1

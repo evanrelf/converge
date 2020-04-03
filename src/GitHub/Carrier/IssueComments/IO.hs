@@ -9,11 +9,11 @@
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 
-module GitHub.Carrier.Issue.Comments.IO
+module GitHub.Carrier.IssueComments.IO
   ( IssueCommentsIOC (..)
-  , runIssueCommentsIO
+  , runIssueComments
   -- Re-exports
-  , module GitHub.Effect.Issue.Comments
+  , module GitHub.Effect.IssueComments
   )
 where
 
@@ -31,16 +31,16 @@ import GitHub.Endpoints.Issues.Comments
   )
 import GitHub.Request (github)
 
-import GitHub.Effect.Issue.Comments
+import GitHub.Effect.IssueComments
 
 
-runIssueCommentsIO
+runIssueComments
   :: Auth
   -> Name Owner
   -> Name Repo
   -> _m a
   -> m (Either Error a)
-runIssueCommentsIO auth owner repo (IssueCommentsIOC m)
+runIssueComments auth owner repo (IssueCommentsIOC m)
   = runThrow
   . runReader repo
   . runReader owner

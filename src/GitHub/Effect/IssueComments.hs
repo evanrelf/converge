@@ -1,4 +1,4 @@
-module GitHub.Effect.Issue.Comments
+module GitHub.Effect.IssueComments
   ( IssueComments (..)
   , getComment
   , getComments
