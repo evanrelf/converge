@@ -43,6 +43,11 @@ import Control.Carrier.Log.IO (Log, Verbosity (..), log, runLog)
 --------------------------------------------------------------------------------
 
 
+type family Asum (xs :: [Type]) :: Type where
+  Asum (x ': '[]) = x
+  Asum (x ': xs) = x :<|> Asum xs
+
+
 class ReflectWebhookEvent (event :: Type) where
   type ToWebhookEvent event :: Servant.RepoWebhookEvent
   reflectWebhookEvent :: Servant.RepoWebhookEvent
@@ -124,11 +129,6 @@ type HealthCheck =
   "health"
     :> Servant.Summary "Health check"
     :> Servant.Get '[Servant.PlainText] Text
-
-
-type family Asum (xs :: [Type]) :: Type where
-  Asum (x ': '[]) = x
-  Asum (x ': xs) = x :<|> Asum xs
 
 
 --------------------------------------------------------------------------------
@@ -313,6 +313,8 @@ instance Servant.HasContextEntry '[GitHubKey] (Servant.GitHubKey result) where
   getContextEntry (GitHubKey x :. _) = x
 
 
+--------------------------------------------------------------------------------
+-- Event sourcing stuff
 --------------------------------------------------------------------------------
 
 
