@@ -25,7 +25,6 @@ import Control.Carrier.Lift (Lift, runM, sendM)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
 import Data.Generics.Product (field)
-import qualified Data.Map as Map
 import Data.String.Interpolate (i)
 import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
@@ -383,4 +382,4 @@ applyEvent state = \case
     Optics.set (field @"issueComments" % Optics.ix id % field @"body") body state
 
   IssueCommentDeleted id ->
-    Optics.over (field @"issueComments") (Map.delete id) state
+    Optics.over (field @"issueComments") (Optics.sans id) state
