@@ -30,8 +30,7 @@ import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
-import qualified Optics
-import Optics ((%))
+import Optics ((%), ix, over, sans, set)
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
@@ -370,16 +369,16 @@ data IssueComment = IssueComment
 applyEvent :: Event -> State -> State
 applyEvent = \case
   PullRequestOpened id ->
-    Optics.set (field @"pullRequests" % Optics.ix id % field @"state") Open
+    set (field @"pullRequests" % ix id % field @"state") Open
 
   PullRequestClosed id ->
-    Optics.set (field @"pullRequests" % Optics.ix id % field @"state") Closed
+    set (field @"pullRequests" % ix id % field @"state") Closed
 
   IssueCommentCreated id issueComment ->
-    Optics.set (field @"issueComments" % Optics.ix id) issueComment
+    set (field @"issueComments" % ix id) issueComment
 
   IssueCommentEdited id body ->
-    Optics.set (field @"issueComments" % Optics.ix id % field @"body") body
+    set (field @"issueComments" % ix id % field @"body") body
 
   IssueCommentDeleted id ->
-    Optics.over (field @"issueComments") (Optics.sans id)
+    over (field @"issueComments") (sans id)
