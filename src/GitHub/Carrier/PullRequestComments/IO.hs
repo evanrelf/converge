@@ -9,11 +9,11 @@
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 
-module GitHub.Carrier.PullRequest.Comments.IO
+module GitHub.Carrier.PullRequestComments.IO
   ( PullRequestCommentsIOC (..)
-  , runPullRequestCommentsIO
+  , runPullRequestComments
   -- Re-exports
-  , module GitHub.Effect.PullRequest.Comments
+  , module GitHub.Effect.PullRequestComments
   )
 where
 
@@ -29,16 +29,16 @@ import GitHub.Endpoints.PullRequests.Comments
   )
 import GitHub.Request (github)
 
-import GitHub.Effect.PullRequest.Comments
+import GitHub.Effect.PullRequestComments
 
 
-runPullRequestCommentsIO
+runPullRequestComments
   :: Auth
   -> Name Owner
   -> Name Repo
   -> _m a
   -> IO (Either Error a)
-runPullRequestCommentsIO auth owner repo (PullRequestCommentsIOC m)
+runPullRequestComments auth owner repo (PullRequestCommentsIOC m)
   = runThrow
   . runReader repo
   . runReader owner

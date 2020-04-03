@@ -67,11 +67,11 @@ library
     Control.Carrier.Log.IO
     Control.Effect.Log
     Converge
-    GitHub.Carrier.Issue.Comments.IO
-    GitHub.Carrier.Issue.Comments.Pure
-    GitHub.Carrier.PullRequest.Comments.IO
-    GitHub.Effect.Issue.Comments
-    GitHub.Effect.PullRequest.Comments
+    GitHub.Carrier.IssueComments.IO
+    GitHub.Carrier.IssueComments.Pure
+    GitHub.Carrier.PullRequestComments.IO
+    GitHub.Effect.IssueComments
+    GitHub.Effect.PullRequestComments
   build-depends:
     , aeson
     , fused-effects ^>= 1.0.0.0
