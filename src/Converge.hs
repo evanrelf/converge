@@ -2,6 +2,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
@@ -16,17 +17,22 @@
 module Converge where
 
 
-import Prelude hiding (trace)
+import Prelude hiding (id)
 
 import Control.Algebra (Has)
 import Control.Carrier.Lift (Lift, runM, sendM)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
+import Data.Generics.Product (field)
+import qualified Data.Map as Map
 import Data.String.Interpolate (i)
 import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
+import qualified Optics
+import Optics ((%))
+import Optics.Operators
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
@@ -276,7 +282,7 @@ onCheckSuite
       log Debug "Check suite: re-requested"
 
     Events.CheckSuiteEventActionOther other -> do
-      log Debug [i|"Check suite: Unknown action '#{other}'|]
+      log Debug [i|Check suite: Unknown action '#{other}'|]
 
 
 onUnknown
@@ -315,3 +321,64 @@ gitHubKey k = GitHubKey (Servant.gitHubKey k)
 
 instance Servant.HasContextEntry '[GitHubKey] (Servant.GitHubKey result) where
   getContextEntry (GitHubKey x :. _) = x
+
+
+--------------------------------------------------------------------------------
+
+
+newtype Id a = Id Int
+  deriving stock (Show)
+  deriving newtype (Eq, Ord, Num)
+
+
+data Event
+  = PullRequestOpened (Id PullRequest)
+  | PullRequestClosed (Id PullRequest)
+  | IssueCommentCreated (Id Issue) IssueComment
+  | IssueCommentEdited (Id Issue) Text
+  | IssueCommentDeleted (Id Issue)
+  deriving stock Show
+
+
+data State = State
+  { pullRequests :: Map (Id PullRequest) PullRequest
+  , issueComments :: Map (Id Issue) IssueComment
+  } deriving stock (Generic, Show)
+
+
+data PullRequestState
+  = Draft
+  | Open
+  | Merged
+  | Closed
+  deriving stock Show
+
+
+data PullRequest = PullRequest
+  { state :: PullRequestState
+  } deriving stock (Generic, Show)
+
+data Issue
+
+data IssueComment = IssueComment
+  { user :: Text
+  , body :: Text
+  } deriving stock (Generic, Show)
+
+
+applyEvent :: State -> Event -> State
+applyEvent state = \case
+  PullRequestOpened id ->
+    state & field @"pullRequests" % Optics.ix id % field @"state" .~ Open
+
+  PullRequestClosed id ->
+    state & field @"pullRequests" % Optics.ix id % field @"state" .~ Closed
+
+  IssueCommentCreated id issueComment ->
+    state & field @"issueComments" % Optics.ix id .~ issueComment
+
+  IssueCommentEdited id body ->
+    state & field @"issueComments" % Optics.ix id % field @"body" .~ body
+
+  IssueCommentDeleted id ->
+    state & field @"issueComments" %~ Map.delete id
