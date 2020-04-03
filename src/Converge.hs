@@ -48,6 +48,17 @@ type family Asum (xs :: [Type]) :: Type where
   Asum (x ': xs) = x :<|> Asum xs
 
 
+type (x :: Type) :# (summary :: Symbol) =
+  Servant.Summary summary :> x
+
+
+type Webhook (event :: Type) =
+  "webhook"
+    :> Servant.GitHubEvent '[ToWebhookEvent event]
+    :> Servant.GitHubSignedReqBody '[Servant.JSON] event
+    :> Servant.Post '[Servant.JSON] Servant.NoContent
+
+
 class ReflectWebhookEvent (event :: Type) where
   type ToWebhookEvent event :: Servant.RepoWebhookEvent
   reflectWebhookEvent :: Servant.RepoWebhookEvent
@@ -100,35 +111,23 @@ sendH = sendM
 
 
 type WebhookApi = Asum
-  [ Data.PingEvent           :# "Ping from GitHub"
-  , Events.PullRequestEvent  :# "Pull request event from GitHub"
-  , Events.IssueCommentEvent :# "Issue comment event from GitHub"
-  , Events.PushEvent         :# "Push event from GitHub"
-  , Events.CheckSuiteEvent   :# "Check suite event from GitHub"
-  , UnknownRequest
-  , HealthCheck
+  [ Webhook Data.PingEvent           :# "Ping from GitHub"
+  , Webhook Events.PullRequestEvent  :# "Pull request event from GitHub"
+  , Webhook Events.IssueCommentEvent :# "Issue comment event from GitHub"
+  , Webhook Events.PushEvent         :# "Push event from GitHub"
+  , Webhook Events.CheckSuiteEvent   :# "Check suite event from GitHub"
+  , UnknownRequest                   :# "Unknown request to webhook path"
+  , HealthCheck                      :# "Health check"
   ]
-
-
-type (event :: Type) :# (summary :: Symbol) =
-  "webhook"
-    :> Servant.Summary summary
-    :> Servant.GitHubEvent '[ToWebhookEvent event]
-    :> Servant.GitHubSignedReqBody '[Servant.JSON] event
-    :> Servant.Post '[Servant.JSON] Servant.NoContent
 
 
 type UnknownRequest =
   "webhook"
-    :> Servant.Summary "Unknown request"
     :> Servant.ReqBody '[Servant.JSON] Aeson.Value
     :> Servant.Post '[Servant.JSON] Servant.NoContent
 
 
-type HealthCheck =
-  "health"
-    :> Servant.Summary "Health check"
-    :> Servant.Get '[Servant.PlainText] Text
+type HealthCheck = "health" :> Servant.Get '[Servant.PlainText] Text
 
 
 --------------------------------------------------------------------------------
