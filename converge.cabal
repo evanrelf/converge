@@ -20,8 +20,8 @@ build-type:  Simple
 
 common common
   build-depends:
-    , base ^>= 4.12.0.0
-    , relude ^>= 0.6.0.0
+    , base
+    , relude
   mixins:
     , base hiding (Prelude)
     , relude (Relude as Prelude, Relude.Extra.Map)
@@ -74,7 +74,8 @@ library
     GitHub.Effect.PullRequestComments
   build-depends:
     , aeson
-    , fused-effects ^>= 1.0.0.0
+    , containers
+    , fused-effects
     , generic-optics
     , github
     , github-webhooks
