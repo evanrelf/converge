@@ -94,7 +94,18 @@ sendH = sendM
 --------------------------------------------------------------------------------
 
 
-type WebhookEndpoint (summary :: Symbol) (event :: Type) =
+type WebhookApi = Asum
+  [ Data.PingEvent           :# "Ping from GitHub"
+  , Events.PullRequestEvent  :# "Pull request event from GitHub"
+  , Events.IssueCommentEvent :# "Issue comment event from GitHub"
+  , Events.PushEvent         :# "Push event from GitHub"
+  , Events.CheckSuiteEvent   :# "Check suite event from GitHub"
+  , UnknownRequest
+  , HealthCheck
+  ]
+
+
+type (event :: Type) :# (summary :: Symbol) =
   "webhook"
     :> Servant.Summary summary
     :> Servant.GitHubEvent '[ToWebhookEvent event]
@@ -102,41 +113,22 @@ type WebhookEndpoint (summary :: Symbol) (event :: Type) =
     :> Servant.Post '[Servant.JSON] Servant.NoContent
 
 
-type WebhookApi =
-  "health"
-    :> Servant.Summary "Health check"
-    :> Servant.Get '[Servant.PlainText] Text
-    :<|>
-
-  WebhookEndpoint
-    "Ping from GitHub"
-    Data.PingEvent
-    :<|>
-
-  WebhookEndpoint
-    "Pull request event from GitHub"
-    Events.PullRequestEvent
-    :<|>
-
-  WebhookEndpoint
-    "Issue comment event from GitHub"
-    Events.IssueCommentEvent
-    :<|>
-
-  WebhookEndpoint
-    "Push event from GitHub"
-    Events.PushEvent
-    :<|>
-
-  WebhookEndpoint
-    "Check suite event from GitHub"
-    Events.CheckSuiteEvent
-    :<|>
-
+type UnknownRequest =
   "webhook"
     :> Servant.Summary "Unknown request"
     :> Servant.ReqBody '[Servant.JSON] Aeson.Value
     :> Servant.Post '[Servant.JSON] Servant.NoContent
+
+
+type HealthCheck =
+  "health"
+    :> Servant.Summary "Health check"
+    :> Servant.Get '[Servant.PlainText] Text
+
+
+type family Asum xs where
+  Asum (x ': '[]) = x
+  Asum (x ': xs) = x :<|> Asum xs
 
 
 --------------------------------------------------------------------------------
@@ -294,13 +286,13 @@ onUnknown value = do
 
 
 server :: Servant.Server WebhookApi
-server = onHealthCheck
-    :<|> runWebhookHandler (runM . runLog verbosity . onPing)
+server = runWebhookHandler (runM . runLog verbosity . onPing)
     :<|> runWebhookHandler (runM . runLog verbosity . onPullRequest)
     :<|> runWebhookHandler (runM . runLog verbosity . onIssueComment)
     :<|> runWebhookHandler (runM . runLog verbosity . onPush)
     :<|> runWebhookHandler (runM . runLog verbosity . onCheckSuite)
     :<|> runM . runLog verbosity . onUnknown
+    :<|> onHealthCheck
   where verbosity = Vomit
 
 
