@@ -34,7 +34,7 @@ import qualified GitHub.Data.Webhooks.Payload as Payload
 import Optics ((%), ix, over, sans, set)
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
-import qualified Servant.GitHub.Webhook as Servant
+import qualified Servant.GitHub.Webhook as ServantGW
 
 import Control.Carrier.Log.IO (Log, Verbosity (..), log, runLog)
 
@@ -55,12 +55,12 @@ type (x :: Type) :# (summary :: Symbol) =
 
 type Webhook (event :: Type) =
   "webhook"
-    :> Servant.GitHubEvent '[ToWebhookEvent event]
-    :> Servant.GitHubSignedReqBody '[Servant.JSON] event
+    :> ServantGW.GitHubEvent '[ToWebhookEvent event]
+    :> ServantGW.GitHubSignedReqBody '[Servant.JSON] event
     :> Servant.Post '[Servant.JSON] Servant.NoContent
 
 
-type family ToWebhookEvent (event :: Type) :: Servant.RepoWebhookEvent where
+type family ToWebhookEvent (event :: Type) :: ServantGW.RepoWebhookEvent where
   ToWebhookEvent Data.PingEvent = 'Data.WebhookPingEvent
   ToWebhookEvent Events.PullRequestEvent = 'Data.WebhookPullRequestEvent
   ToWebhookEvent Events.IssueCommentEvent = 'Data.WebhookIssueCommentEvent
@@ -70,14 +70,14 @@ type family ToWebhookEvent (event :: Type) :: Servant.RepoWebhookEvent where
 
 runWebhookHandler
   :: forall event
-   . Servant.Reflect (ToWebhookEvent event)
+   . ServantGW.Reflect (ToWebhookEvent event)
   => (event -> Servant.Handler ())
-  -> Servant.RepoWebhookEvent
+  -> ServantGW.RepoWebhookEvent
   -> ((), event)
   -> Servant.Handler Servant.NoContent
 runWebhookHandler handler repoWebhookEvent ((), event) = do
   let proxy = Proxy @(ToWebhookEvent event)
-  when (repoWebhookEvent == Servant.reflect proxy) (handler event)
+  when (repoWebhookEvent == ServantGW.reflect proxy) (handler event)
   pure Servant.NoContent
 
 
@@ -281,14 +281,14 @@ server = runWebhookHandler (runM . runLog verbosity . onPing)
 --------------------------------------------------------------------------------
 
 
-newtype GitHubKey = GitHubKey (forall result. Servant.GitHubKey result)
+newtype GitHubKey = GitHubKey (forall result. ServantGW.GitHubKey result)
 
 
 gitHubKey :: IO ByteString -> GitHubKey
-gitHubKey k = GitHubKey (Servant.gitHubKey k)
+gitHubKey k = GitHubKey (ServantGW.gitHubKey k)
 
 
-instance Servant.HasContextEntry '[GitHubKey] (Servant.GitHubKey result) where
+instance Servant.HasContextEntry '[GitHubKey] (ServantGW.GitHubKey result) where
   getContextEntry (GitHubKey x :. _) = x
 
 
