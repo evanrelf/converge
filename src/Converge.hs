@@ -35,7 +35,58 @@ import Control.Carrier.Log.IO (Log, Verbosity (..), log, runLog)
 
 
 --------------------------------------------------------------------------------
--- Servant API
+-- Helpers
+--------------------------------------------------------------------------------
+
+
+class ReflectWebhookEvent (event :: Type) where
+  type ToWebhookEvent event :: Servant.RepoWebhookEvent
+  reflectWebhookEvent :: Servant.RepoWebhookEvent
+
+
+instance ReflectWebhookEvent Data.PingEvent where
+  type ToWebhookEvent Data.PingEvent = 'Data.WebhookPingEvent
+  reflectWebhookEvent = Data.WebhookPingEvent
+
+
+instance ReflectWebhookEvent Events.PullRequestEvent where
+  type ToWebhookEvent Events.PullRequestEvent = 'Data.WebhookPullRequestEvent
+  reflectWebhookEvent = Data.WebhookPullRequestEvent
+
+
+instance ReflectWebhookEvent Events.IssueCommentEvent where
+  type ToWebhookEvent Events.IssueCommentEvent = 'Data.WebhookIssueCommentEvent
+  reflectWebhookEvent = Data.WebhookIssueCommentEvent
+
+
+instance ReflectWebhookEvent Events.PushEvent where
+  type ToWebhookEvent Events.PushEvent = 'Data.WebhookPushEvent
+  reflectWebhookEvent = Data.WebhookPushEvent
+
+
+instance ReflectWebhookEvent Events.CheckSuiteEvent where
+  type ToWebhookEvent Events.CheckSuiteEvent = 'Data.WebhookCheckSuiteEvent
+  reflectWebhookEvent = Data.WebhookCheckSuiteEvent
+
+
+runWebhookHandler
+  :: forall event
+   . ReflectWebhookEvent event
+  => (event -> Servant.Handler ())
+  -> Servant.RepoWebhookEvent
+  -> ((), event)
+  -> Servant.Handler Servant.NoContent
+runWebhookHandler handler repoWebhookEvent ((), event) = do
+  when (repoWebhookEvent == reflectWebhookEvent @event) (handler event)
+  pure Servant.NoContent
+
+
+sendH :: Has (Lift Servant.Handler) sig m => Servant.Handler a -> m a
+sendH = sendM
+
+
+--------------------------------------------------------------------------------
+-- API
 --------------------------------------------------------------------------------
 
 
@@ -84,50 +135,9 @@ type WebhookApi =
     :> Servant.Post '[Servant.JSON] Servant.NoContent
 
 
-class ReflectWebhookEvent (event :: Type) where
-  type ToWebhookEvent event :: Servant.RepoWebhookEvent
-  reflectWebhookEvent :: Servant.RepoWebhookEvent
-
-
-instance ReflectWebhookEvent Data.PingEvent where
-  type ToWebhookEvent Data.PingEvent = 'Data.WebhookPingEvent
-  reflectWebhookEvent = Data.WebhookPingEvent
-
-
-instance ReflectWebhookEvent Events.PullRequestEvent where
-  type ToWebhookEvent Events.PullRequestEvent = 'Data.WebhookPullRequestEvent
-  reflectWebhookEvent = Data.WebhookPullRequestEvent
-
-
-instance ReflectWebhookEvent Events.IssueCommentEvent where
-  type ToWebhookEvent Events.IssueCommentEvent = 'Data.WebhookIssueCommentEvent
-  reflectWebhookEvent = Data.WebhookIssueCommentEvent
-
-
-instance ReflectWebhookEvent Events.PushEvent where
-  type ToWebhookEvent Events.PushEvent = 'Data.WebhookPushEvent
-  reflectWebhookEvent = Data.WebhookPushEvent
-
-
-instance ReflectWebhookEvent Events.CheckSuiteEvent where
-  type ToWebhookEvent Events.CheckSuiteEvent = 'Data.WebhookCheckSuiteEvent
-  reflectWebhookEvent = Data.WebhookCheckSuiteEvent
-
-
-runWebhookHandler
-  :: forall event
-   . ReflectWebhookEvent event
-  => (event -> Servant.Handler ())
-  -> Servant.RepoWebhookEvent
-  -> ((), event)
-  -> Servant.Handler Servant.NoContent
-runWebhookHandler handler repoWebhookEvent ((), event) = do
-  when (repoWebhookEvent == reflectWebhookEvent @event) (handler event)
-  pure Servant.NoContent
-
-
-sendH :: Has (Lift Servant.Handler) sig m => Servant.Handler a -> m a
-sendH = sendM
+--------------------------------------------------------------------------------
+-- Handlers
+--------------------------------------------------------------------------------
 
 
 onHealthCheck :: Servant.Handler Text
