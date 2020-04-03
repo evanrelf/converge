@@ -11,6 +11,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
+{-# OPTIONS_GHC -Wno-name-shadowing  #-}
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 
@@ -32,7 +33,6 @@ import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
 import qualified Optics
 import Optics ((%))
-import Optics.Operators
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as Servant
@@ -358,7 +358,9 @@ data PullRequest = PullRequest
   { state :: PullRequestState
   } deriving stock (Generic, Show)
 
+
 data Issue
+
 
 data IssueComment = IssueComment
   { user :: Text
@@ -369,16 +371,16 @@ data IssueComment = IssueComment
 applyEvent :: State -> Event -> State
 applyEvent state = \case
   PullRequestOpened id ->
-    state & field @"pullRequests" % Optics.ix id % field @"state" .~ Open
+    Optics.set (field @"pullRequests" % Optics.ix id % field @"state") Open state
 
   PullRequestClosed id ->
-    state & field @"pullRequests" % Optics.ix id % field @"state" .~ Closed
+    Optics.set (field @"pullRequests" % Optics.ix id % field @"state") Closed state
 
   IssueCommentCreated id issueComment ->
-    state & field @"issueComments" % Optics.ix id .~ issueComment
+    Optics.set (field @"issueComments" % Optics.ix id) issueComment state
 
   IssueCommentEdited id body ->
-    state & field @"issueComments" % Optics.ix id % field @"body" .~ body
+    Optics.set (field @"issueComments" % Optics.ix id % field @"body") body state
 
   IssueCommentDeleted id ->
-    state & field @"issueComments" %~ Map.delete id
+    Optics.over (field @"issueComments") (Map.delete id) state
