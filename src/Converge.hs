@@ -126,7 +126,7 @@ type HealthCheck =
     :> Servant.Get '[Servant.PlainText] Text
 
 
-type family Asum xs where
+type family Asum (xs :: [Type]) :: Type where
   Asum (x ': '[]) = x
   Asum (x ': xs) = x :<|> Asum xs
 
