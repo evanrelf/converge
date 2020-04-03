@@ -367,19 +367,19 @@ data IssueComment = IssueComment
   } deriving stock (Generic, Show)
 
 
-applyEvent :: State -> Event -> State
-applyEvent state = \case
+applyEvent :: Event -> State -> State
+applyEvent = \case
   PullRequestOpened id ->
-    Optics.set (field @"pullRequests" % Optics.ix id % field @"state") Open state
+    Optics.set (field @"pullRequests" % Optics.ix id % field @"state") Open
 
   PullRequestClosed id ->
-    Optics.set (field @"pullRequests" % Optics.ix id % field @"state") Closed state
+    Optics.set (field @"pullRequests" % Optics.ix id % field @"state") Closed
 
   IssueCommentCreated id issueComment ->
-    Optics.set (field @"issueComments" % Optics.ix id) issueComment state
+    Optics.set (field @"issueComments" % Optics.ix id) issueComment
 
   IssueCommentEdited id body ->
-    Optics.set (field @"issueComments" % Optics.ix id % field @"body") body state
+    Optics.set (field @"issueComments" % Optics.ix id % field @"body") body
 
   IssueCommentDeleted id ->
-    Optics.over (field @"issueComments") (Optics.sans id) state
+    Optics.over (field @"issueComments") (Optics.sans id)
