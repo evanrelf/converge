@@ -74,8 +74,8 @@ library
     GitHub.Effect.PullRequestComments
   build-depends:
     , aeson
-    , containers
     , fused-effects
+    , generic-data
     , generic-optics
     , github
     , github-webhooks

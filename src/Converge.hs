@@ -1,5 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
@@ -28,6 +29,7 @@ import qualified Data.Aeson.Text as Aeson
 import Data.Generics.Product (field)
 import Data.String.Interpolate (i)
 import GHC.TypeLits (Symbol)
+import Generic.Data (Generically (..))
 import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
@@ -302,21 +304,6 @@ newtype Id a = Id Int
   deriving newtype (Eq, Ord, Num)
 
 
-data Event
-  = PullRequestOpened (Id PullRequest)
-  | PullRequestClosed (Id PullRequest)
-  | IssueCommentCreated (Id Issue) IssueComment
-  | IssueCommentEdited (Id Issue) Text
-  | IssueCommentDeleted (Id Issue)
-  deriving stock Show
-
-
-data State = State
-  { pullRequests :: Map (Id PullRequest) PullRequest
-  , issueComments :: Map (Id Issue) IssueComment
-  } deriving stock (Generic, Show)
-
-
 data PullRequestState
   = Draft
   | Open
@@ -337,6 +324,23 @@ data IssueComment = IssueComment
   { user :: Text
   , body :: Text
   } deriving stock (Generic, Show)
+
+
+data Event
+  = PullRequestOpened (Id PullRequest)
+  | PullRequestClosed (Id PullRequest)
+  | IssueCommentCreated (Id Issue) IssueComment
+  | IssueCommentEdited (Id Issue) Text
+  | IssueCommentDeleted (Id Issue)
+  deriving stock Show
+
+
+data State = State
+  { pullRequests :: Map (Id PullRequest) PullRequest
+  , issueComments :: Map (Id Issue) IssueComment
+  } deriving stock (Generic, Show)
+    deriving Semigroup via Generically State
+    deriving Monoid via Generically State
 
 
 applyEvent :: Event -> State -> State
