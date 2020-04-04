@@ -343,8 +343,8 @@ data State = State
     deriving Monoid via Generically State
 
 
-applyEvent :: Event -> State -> State
-applyEvent = \case
+applyEvent :: State -> Event -> State
+applyEvent state = (state &) . \case
   PullRequestOpened id ->
     set (field @"pullRequests" % ix id % field @"state") Open
 
