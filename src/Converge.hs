@@ -23,7 +23,7 @@ module Converge where
 import Prelude hiding (id)
 
 import Control.Algebra (Has)
-import Control.Carrier.Lift (Lift, runM, sendM)
+import Control.Carrier.Lift (runM)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
 import Data.Generics.Product (field)
@@ -83,10 +83,6 @@ webhookHandler handler repoWebhookEvent ((), event) = do
   pure Servant.NoContent
 
 
-sendH :: Has (Lift Servant.Handler) sig m => Servant.Handler a -> m a
-sendH = sendM
-
-
 --------------------------------------------------------------------------------
 -- API
 --------------------------------------------------------------------------------
@@ -121,17 +117,11 @@ onHealthCheck :: Servant.Handler Text
 onHealthCheck = pure "All good"
 
 
-onPing
-  :: Has (Lift Servant.Handler) sig m
-  => Has Log sig m
-  => Data.PingEvent -> m ()
+onPing :: Has Log sig m => Data.PingEvent -> m ()
 onPing _event = log Debug "Pong!"
 
 
-onPullRequest
-  :: Has (Lift Servant.Handler) sig m
-  => Has Log sig m
-  => Events.PullRequestEvent -> m ()
+onPullRequest :: Has Log sig m => Events.PullRequestEvent -> m ()
 onPullRequest
   ( Events.PullRequestEvent
     action
@@ -176,10 +166,7 @@ onPullRequest
       log Debug [i|Pull request ##{number}: unknown action '#{other}'|]
 
 
-onIssueComment
-  :: Has (Lift Servant.Handler) sig m
-  => Has Log sig m
-  => Events.IssueCommentEvent -> m ()
+onIssueComment :: Has Log sig m => Events.IssueCommentEvent -> m ()
 onIssueComment
   ( Events.IssueCommentEvent
     action
@@ -204,11 +191,7 @@ onIssueComment
       log Debug [i|Issue ##{number}: unknown comment action '#{other}'|]
 
 
-onPush
-  :: Has (Lift Servant.Handler) sig m
-  => Has Log sig m
-  => Events.PushEvent
-  -> m ()
+onPush :: Has Log sig m => Events.PushEvent -> m ()
 onPush
   ( Events.PushEvent
     _ref
@@ -228,11 +211,7 @@ onPush
   log Debug "Push event"
 
 
-onCheckSuite
-  :: Has (Lift Servant.Handler) sig m
-  => Has Log sig m
-  => Events.CheckSuiteEvent
-  -> m ()
+onCheckSuite :: Has Log sig m => Events.CheckSuiteEvent -> m ()
 onCheckSuite
   ( Events.CheckSuiteEvent
     action
@@ -256,11 +235,7 @@ onCheckSuite
       log Debug [i|Check suite: Unknown action '#{other}'|]
 
 
-onUnknown
-  :: Has (Lift Servant.Handler) sig m
-  => Has Log sig m
-  => Aeson.Value
-  -> m Servant.NoContent
+onUnknown :: Has Log sig m => Aeson.Value -> m Servant.NoContent
 onUnknown value = do
   log Vomit ("Unknown request: " <> toText (Aeson.encodeToLazyText value))
   pure Servant.NoContent
