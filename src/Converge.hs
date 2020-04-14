@@ -6,15 +6,15 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
-
-{-# OPTIONS_GHC -Wno-name-shadowing  #-}
-{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 
 module Converge where
@@ -26,7 +26,6 @@ import Control.Algebra (Has)
 import Control.Carrier.Lift (runM)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
-import Data.Generics.Product (field)
 import Data.String.Interpolate (i)
 import GHC.TypeLits (Symbol)
 import Generic.Data (Generically (..))
@@ -35,6 +34,7 @@ import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
 import qualified Network.Wai.Handler.Warp as Warp
 import Optics ((%), at, ix, over, sans, set)
+import qualified Optics.TH
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as ServantGW
@@ -321,20 +321,23 @@ data PullRequestState
   | Merged
   | Closed
   deriving stock Show
+Optics.TH.makePrismLabels ''PullRequestState
 
 
 data PullRequest = PullRequest
-  { state :: PullRequestState
-  } deriving stock (Generic, Show)
+  { pullRequestState :: PullRequestState
+  } deriving stock Show
+Optics.TH.makeFieldLabels ''PullRequest
 
 
 data Issue
 
 
 data IssueComment = IssueComment
-  { user :: Text
-  , body :: Text
-  } deriving stock (Generic, Show)
+  { issueCommentUser :: Text
+  , issueCommentBody :: Text
+  } deriving stock Show
+Optics.TH.makeFieldLabels ''IssueComment
 
 
 data Event
@@ -344,29 +347,31 @@ data Event
   | IssueCommentEdited (Id Issue) Text
   | IssueCommentDeleted (Id Issue)
   deriving stock Show
+Optics.TH.makePrismLabels ''Event
 
 
 data State = State
-  { pullRequests :: Map (Id PullRequest) PullRequest
-  , issueComments :: Map (Id Issue) IssueComment
+  { statePullRequests :: Map (Id PullRequest) PullRequest
+  , stateIssueComments :: Map (Id Issue) IssueComment
   } deriving stock (Generic, Show)
     deriving Semigroup via Generically State
     deriving Monoid via Generically State
+Optics.TH.makeFieldLabels ''State
 
 
 applyEvent :: State -> Event -> State
 applyEvent state = (state &) . \case
   PullRequestOpened id pullRequest ->
-    set (field @"pullRequests" % at id) (Just pullRequest)
+    set (#pullRequests % at id) (Just pullRequest)
 
   PullRequestClosed id ->
-    set (field @"pullRequests" % ix id % field @"state") Closed
+    set (#pullRequests % ix id % #state) Closed
 
   IssueCommentCreated id issueComment ->
-    set (field @"issueComments" % at id) (Just issueComment)
+    set (#issueComments % at id) (Just issueComment)
 
   IssueCommentEdited id body ->
-    set (field @"issueComments" % ix id % field @"body") body
+    set (#issueComments % ix id % #body) body
 
   IssueCommentDeleted id ->
-    over (field @"issueComments") (sans id)
+    over (#issueComments) (sans id)
