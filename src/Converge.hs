@@ -70,14 +70,14 @@ type family ToWebhookEvent (event :: Type) :: ServantGW.RepoWebhookEvent where
   ToWebhookEvent Events.CheckSuiteEvent = 'Data.WebhookCheckSuiteEvent
 
 
-runWebhookHandler
+webhookHandler
   :: forall event
    . ServantGW.Reflect (ToWebhookEvent event)
   => (event -> Servant.Handler ())
   -> ServantGW.RepoWebhookEvent
   -> ((), event)
   -> Servant.Handler Servant.NoContent
-runWebhookHandler handler repoWebhookEvent ((), event) = do
+webhookHandler handler repoWebhookEvent ((), event) = do
   let proxy = Proxy @(ToWebhookEvent event)
   when (repoWebhookEvent == ServantGW.reflect proxy) (handler event)
   pure Servant.NoContent
@@ -267,11 +267,11 @@ onUnknown value = do
 
 
 server :: Servant.Server WebhookApi
-server = runWebhookHandler (runM . runLog verbosity . onPing)
-    :<|> runWebhookHandler (runM . runLog verbosity . onPullRequest)
-    :<|> runWebhookHandler (runM . runLog verbosity . onIssueComment)
-    :<|> runWebhookHandler (runM . runLog verbosity . onPush)
-    :<|> runWebhookHandler (runM . runLog verbosity . onCheckSuite)
+server = webhookHandler (runM . runLog verbosity . onPing)
+    :<|> webhookHandler (runM . runLog verbosity . onPullRequest)
+    :<|> webhookHandler (runM . runLog verbosity . onIssueComment)
+    :<|> webhookHandler (runM . runLog verbosity . onPush)
+    :<|> webhookHandler (runM . runLog verbosity . onCheckSuite)
     :<|> runM . runLog verbosity . onUnknown
     :<|> onHealthCheck
   where verbosity = Vomit
