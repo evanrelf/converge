@@ -9,6 +9,8 @@
 - Event sourcing design, with replayable event log to fuzz test pure core
 - See if basic GitHub stuff like auth and errors can be generalized across
   multiple effects
+- When receiving edit events for unknown items, a fetch for that item should be
+  triggered
 
 ## Tasks
 
