@@ -33,12 +33,32 @@ import Generic.Data (Generically (..))
 import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
+import qualified Network.Wai.Handler.Warp as Warp
 import Optics ((%), at, ix, over, sans, set)
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as ServantGW
 
 import Control.Carrier.Log.IO (Log, Verbosity (..), log, runLog)
+
+
+--------------------------------------------------------------------------------
+-- Main
+--------------------------------------------------------------------------------
+
+
+main :: IO ()
+main = do
+  let host = "localhost"
+  let port = 8080
+  let secret = "super-secret-code"
+
+  putTextLn ("Running at http://" <> host <> ":" <> show port)
+  Warp.run port
+    (Servant.serveWithContext
+      (Proxy @WebhookApi)
+      (gitHubKey (pure secret) :. Servant.EmptyContext)
+      server)
 
 
 --------------------------------------------------------------------------------
