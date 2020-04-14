@@ -56,7 +56,7 @@ main = do
   putTextLn ("Running at http://" <> host <> ":" <> show port)
   Warp.run port
     (Servant.serveWithContext
-      (Proxy @WebhookApi)
+      (Proxy @Api)
       (gitHubKey (pure secret) :. Servant.EmptyContext)
       server)
 
@@ -108,6 +108,9 @@ webhookHandler handler repoWebhookEvent ((), event) = do
 --------------------------------------------------------------------------------
 
 
+type Api = WebhookApi :<|> DebugApi
+
+
 type WebhookApi = Asum
   [ Webhook Data.PingEvent           :# "Ping from GitHub"
   , Webhook Events.PullRequestEvent  :# "Pull request event from GitHub"
@@ -115,8 +118,10 @@ type WebhookApi = Asum
   , Webhook Events.PushEvent         :# "Push event from GitHub"
   , Webhook Events.CheckSuiteEvent   :# "Check suite event from GitHub"
   , UnknownRequest                   :# "Unknown request to webhook path"
-  , HealthCheck                      :# "Health check"
   ]
+
+
+type DebugApi = HealthCheck
 
 
 type UnknownRequest =
@@ -125,7 +130,10 @@ type UnknownRequest =
     :> Servant.Post '[Servant.JSON] Servant.NoContent
 
 
-type HealthCheck = "health" :> Servant.Get '[Servant.PlainText] Text
+type HealthCheck =
+  "health"
+    :> Servant.Summary "Health check"
+    :> Servant.Get '[Servant.PlainText] Text
 
 
 --------------------------------------------------------------------------------
@@ -261,15 +269,23 @@ onUnknown value = do
   pure Servant.NoContent
 
 
-server :: Servant.Server WebhookApi
-server = webhookHandler (runM . runLog verbosity . onPing)
-    :<|> webhookHandler (runM . runLog verbosity . onPullRequest)
-    :<|> webhookHandler (runM . runLog verbosity . onIssueComment)
-    :<|> webhookHandler (runM . runLog verbosity . onPush)
-    :<|> webhookHandler (runM . runLog verbosity . onCheckSuite)
-    :<|> runM . runLog verbosity . onUnknown
-    :<|> onHealthCheck
+server :: Servant.Server Api
+server = webhookServer :<|> debugServer
+
+
+webhookServer :: Servant.Server WebhookApi
+webhookServer =
+       webhookHandler (runM . runLog verbosity . onPing)
+  :<|> webhookHandler (runM . runLog verbosity . onPullRequest)
+  :<|> webhookHandler (runM . runLog verbosity . onIssueComment)
+  :<|> webhookHandler (runM . runLog verbosity . onPush)
+  :<|> webhookHandler (runM . runLog verbosity . onCheckSuite)
+  :<|> runM . runLog verbosity . onUnknown
   where verbosity = Vomit
+
+
+debugServer :: Servant.Server DebugApi
+debugServer = onHealthCheck
 
 
 --------------------------------------------------------------------------------
