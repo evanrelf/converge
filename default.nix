@@ -57,7 +57,7 @@ let
 
   # To load into Docker and run as a container:
   # docker load --input $(nix-build --no-link --attr dockerImage)
-  # docker run --interactive --tty --publish "8080:8080" --rm converge:latest
+  # docker run --interactive --tty --publish "7777:7777" --rm converge:latest
   dockerImage =
     let
       linuxPkgs =
@@ -75,7 +75,7 @@ let
             linuxPkgs.haskellPackages.converge;
         config = {
           Entrypoint = "/bin/converge";
-          ExposedPorts = { "8080" = {}; };
+          ExposedPorts = { "7777" = {}; };
         };
       };
 
