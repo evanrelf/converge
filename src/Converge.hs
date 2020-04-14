@@ -33,7 +33,7 @@ import Generic.Data (Generically (..))
 import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
-import Optics ((%), ix, over, sans, set)
+import Optics ((%), at, ix, over, sans, set)
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as ServantGW
@@ -327,7 +327,7 @@ data IssueComment = IssueComment
 
 
 data Event
-  = PullRequestOpened (Id PullRequest)
+  = PullRequestOpened (Id PullRequest) PullRequest
   | PullRequestClosed (Id PullRequest)
   | IssueCommentCreated (Id Issue) IssueComment
   | IssueCommentEdited (Id Issue) Text
@@ -345,14 +345,14 @@ data State = State
 
 applyEvent :: State -> Event -> State
 applyEvent state = (state &) . \case
-  PullRequestOpened id ->
-    set (field @"pullRequests" % ix id % field @"state") Open
+  PullRequestOpened id pullRequest ->
+    set (field @"pullRequests" % at id) (Just pullRequest)
 
   PullRequestClosed id ->
     set (field @"pullRequests" % ix id % field @"state") Closed
 
   IssueCommentCreated id issueComment ->
-    set (field @"issueComments" % ix id) issueComment
+    set (field @"issueComments" % at id) (Just issueComment)
 
   IssueCommentEdited id body ->
     set (field @"issueComments" % ix id % field @"body") body
