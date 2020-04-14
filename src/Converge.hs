@@ -50,7 +50,7 @@ import Control.Carrier.Log.IO (Log, Verbosity (..), log, runLog)
 main :: IO ()
 main = do
   let host = "localhost"
-  let port = 8080
+  let port = 7777
   let secret = "super-secret-code"
 
   putTextLn ("Running at http://" <> host <> ":" <> show port)
