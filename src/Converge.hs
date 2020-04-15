@@ -15,9 +15,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
-{-# OPTIONS_GHC -Wno-name-shadowing  #-}
-{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
-
 
 module Converge where
 
