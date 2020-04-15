@@ -6,8 +6,10 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -150,106 +152,68 @@ onPing _event = log Debug "Pong!"
 
 
 onPullRequest :: Has Log sig m => Events.PullRequestEvent -> m ()
-onPullRequest
-  ( Events.PullRequestEvent
-    action
-    number
-    _payload
-    _repo
-    _sender
-    _installationId
-  ) = do
-  case action of
+onPullRequest Events.PullRequestEvent{..} = do
+  case evPullReqAction of
     Events.PullRequestAssignedAction -> do
-      log Debug [i|Pull request ##{number}: assigned|]
+      log Debug [i|Pull request ##{evPullReqNumber}: assigned|]
 
     Events.PullRequestUnassignedAction -> do
-      log Debug [i|Pull request ##{number}: unassigned|]
+      log Debug [i|Pull request ##{evPullReqNumber}: unassigned|]
 
     Events.PullRequestReviewRequestedAction -> do
-      log Debug [i|Pull request ##{number}: review requested|]
+      log Debug [i|Pull request ##{evPullReqNumber}: review requested|]
 
     Events.PullRequestReviewRequestRemovedAction -> do
-      log Debug [i|Pull request ##{number}: review request removed|]
+      log Debug [i|Pull request ##{evPullReqNumber}: review request removed|]
 
     Events.PullRequestLabeledAction -> do
-      log Debug [i|Pull request ##{number}: labeled|]
+      log Debug [i|Pull request ##{evPullReqNumber}: labeled|]
 
     Events.PullRequestUnlabeledAction -> do
-      log Debug [i|Pull request ##{number}: unlabeled|]
+      log Debug [i|Pull request ##{evPullReqNumber}: unlabeled|]
 
     Events.PullRequestOpenedAction -> do
-      log Debug [i|Pull request ##{number}: opened|]
+      log Debug [i|Pull request ##{evPullReqNumber}: opened|]
 
     Events.PullRequestEditedAction -> do
-      log Debug [i|Pull request ##{number}: edited|]
+      log Debug [i|Pull request ##{evPullReqNumber}: edited|]
 
     Events.PullRequestClosedAction -> do
-      log Debug [i|Pull request ##{number}: closed|]
+      log Debug [i|Pull request ##{evPullReqNumber}: closed|]
 
     Events.PullRequestReopenedAction -> do
-      log Debug [i|Pull request ##{number}: reopened|]
+      log Debug [i|Pull request ##{evPullReqNumber}: reopened|]
 
     Events.PullRequestActionOther other -> do
-      log Debug [i|Pull request ##{number}: unknown action '#{other}'|]
+      log Debug [i|Pull request ##{evPullReqNumber}: unknown action '#{other}'|]
 
 
 onIssueComment :: Has Log sig m => Events.IssueCommentEvent -> m ()
-onIssueComment
-  ( Events.IssueCommentEvent
-    action
-    issue
-    _payload
-    _repo
-    _sender
-  ) = do
-  let number = Payload.whIssueNumber issue
+onIssueComment Events.IssueCommentEvent{..} = do
+  let Payload.HookIssue{whIssueNumber} = evIssueCommentIssue
 
-  case action of
+  case evIssueCommentAction of
     Events.IssueCommentCreatedAction -> do
-      log Debug [i|Issue ##{number}: comment created|]
+      log Debug [i|Issue ##{whIssueNumber}: comment created|]
 
     Events.IssueCommentEditedAction -> do
-      log Debug [i|Issue ##{number}: comment edited|]
+      log Debug [i|Issue ##{whIssueNumber}: comment edited|]
 
     Events.IssueCommentDeletedAction ->
-      log Debug [i|Issue ##{number}: comment deleted|]
+      log Debug [i|Issue ##{whIssueNumber}: comment deleted|]
 
     Events.IssueCommentActionOther other -> do
-      log Debug [i|Issue ##{number}: unknown comment action '#{other}'|]
+      log Debug [i|Issue ##{whIssueNumber}: unknown comment action '#{other}'|]
 
 
 onPush :: Has Log sig m => Events.PushEvent -> m ()
-onPush
-  ( Events.PushEvent
-    _ref
-    _headSha
-    _beforeSha
-    _created
-    _deleted
-    _forced
-    _baseRef
-    _compareUrl
-    _commits
-    _headCommit
-    _repository
-    _organization
-    _sender
-  ) = do
+onPush Events.PushEvent{..} = do
   log Debug "Push event"
 
 
 onCheckSuite :: Has Log sig m => Events.CheckSuiteEvent -> m ()
-onCheckSuite
-  ( Events.CheckSuiteEvent
-    action
-    _checkSuite
-    _repository
-    _organization
-    _sender
-    _installation
-  ) = do
-  case action of
+onCheckSuite Events.CheckSuiteEvent{..} = do
+  case evCheckSuiteAction of
     Events.CheckSuiteEventActionCompleted -> do
       log Debug "Check suite: completed"
 
