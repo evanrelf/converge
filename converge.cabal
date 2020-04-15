@@ -74,6 +74,7 @@ library
     GitHub.Effect.PullRequestComments
   build-depends:
     , aeson
+    , concurrency
     , fused-effects
     , generic-data
     , generic-optics

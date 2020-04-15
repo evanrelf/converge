@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -23,6 +24,9 @@ import Prelude hiding (id)
 
 import Control.Algebra (Has)
 import Control.Carrier.Lift (runM)
+import Control.Concurrent.Classy (MonadConc)
+import qualified Control.Concurrent.Classy as Concurrent
+import qualified Control.Concurrent.Classy.Async as Async
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
 import Data.Generics.Product (field)
@@ -48,16 +52,29 @@ import Control.Carrier.Log.IO (Log, Verbosity (..), log, runLog)
 
 main :: IO ()
 main = do
+  let launch = Async.runConcurrently . asum . fmap Async.Concurrently
+
+  launch [api, eventLog]
+
+
+api :: (MonadIO m, MonadConc m) => m ()
+api = do
   let host = "localhost"
   let port = 7777
   let secret = "super-secret-code"
 
   putTextLn ("Running at http://" <> host <> ":" <> show port)
-  Warp.run port
+  liftIO $ Warp.run port
     (Servant.serveWithContext
       (Proxy @Api)
       (gitHubKey (pure secret) :. Servant.EmptyContext)
       server)
+
+
+eventLog :: (MonadIO m, MonadConc m) => m ()
+eventLog = forever do
+  putTextLn "Fake event log"
+  Concurrent.threadDelay (5 * 1000000)
 
 
 --------------------------------------------------------------------------------
