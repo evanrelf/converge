@@ -174,15 +174,21 @@ onPullRequest Events.PullRequestEvent{..} = do
 
     Events.PullRequestOpenedAction -> do
       log Debug [i|Pull request ##{evPullReqNumber}: opened|]
+      let pullRequest = PullRequest
+            { state = Open
+            }
+      pushEvent (PullRequestOpened (Id evPullReqNumber) pullRequest)
 
     Events.PullRequestEditedAction -> do
       log Debug [i|Pull request ##{evPullReqNumber}: edited|]
 
     Events.PullRequestClosedAction -> do
       log Debug [i|Pull request ##{evPullReqNumber}: closed|]
+      pushEvent (PullRequestClosed (Id evPullReqNumber))
 
     Events.PullRequestReopenedAction -> do
       log Debug [i|Pull request ##{evPullReqNumber}: reopened|]
+      pushEvent (PullRequestReopened (Id evPullReqNumber))
 
     Events.PullRequestActionOther other -> do
       log Debug [i|Pull request ##{evPullReqNumber}: unknown action '#{other}'|]
@@ -191,16 +197,25 @@ onPullRequest Events.PullRequestEvent{..} = do
 onIssueComment :: Has Log sig m => Events.IssueCommentEvent -> m ()
 onIssueComment Events.IssueCommentEvent{..} = do
   let Payload.HookIssue{whIssueNumber} = evIssueCommentIssue
+  let Payload.HookIssueComment{whIssueCommentBody, whIssueCommentUser} = evIssueCommentPayload
+  let Payload.HookUser{whUserLogin} = whIssueCommentUser
 
   case evIssueCommentAction of
     Events.IssueCommentCreatedAction -> do
       log Debug [i|Issue ##{whIssueNumber}: comment created|]
+      let issueComment = IssueComment
+            { body = whIssueCommentBody
+            , user = whUserLogin
+            }
+      pushEvent (IssueCommentCreated (Id whIssueNumber) issueComment)
 
     Events.IssueCommentEditedAction -> do
       log Debug [i|Issue ##{whIssueNumber}: comment edited|]
+      pushEvent (IssueCommentEdited (Id whIssueNumber) whIssueCommentBody)
 
-    Events.IssueCommentDeletedAction ->
+    Events.IssueCommentDeletedAction -> do
       log Debug [i|Issue ##{whIssueNumber}: comment deleted|]
+      pushEvent (IssueCommentDeleted (Id whIssueNumber))
 
     Events.IssueCommentActionOther other -> do
       log Debug [i|Issue ##{whIssueNumber}: unknown comment action '#{other}'|]
@@ -304,6 +319,7 @@ data IssueComment = IssueComment
 data Event
   = PullRequestOpened (Id PullRequest) PullRequest
   | PullRequestClosed (Id PullRequest)
+  | PullRequestReopened (Id PullRequest)
   | IssueCommentCreated (Id Issue) IssueComment
   | IssueCommentEdited (Id Issue) Text
   | IssueCommentDeleted (Id Issue)
@@ -318,6 +334,10 @@ data State = State
     deriving Monoid via Generically State
 
 
+pushEvent :: Event -> m ()
+pushEvent = undefined
+
+
 applyEvent :: State -> Event -> State
 applyEvent state = (state &) . \case
   PullRequestOpened id pullRequest ->
@@ -325,6 +345,9 @@ applyEvent state = (state &) . \case
 
   PullRequestClosed id ->
     set (field @"pullRequests" % ix id % field @"state") Closed
+
+  PullRequestReopened id ->
+    set (field @"pullRequests" % ix id % field @"state") Open
 
   IssueCommentCreated id issueComment ->
     set (field @"issueComments" % at id) (Just issueComment)
