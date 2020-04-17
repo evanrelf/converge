@@ -8,6 +8,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -59,11 +60,11 @@ main = do
 
 api :: (MonadIO m, MonadConc m) => m ()
 api = do
-  let host = "localhost"
+  let host = "localhost" :: Text
   let port = 7777
   let secret = "super-secret-code"
 
-  putTextLn ("Running at http://" <> host <> ":" <> show port)
+  putTextLn [i|Running at http://#{host}:#{port}|]
   liftIO $ Warp.run port
     (Servant.serveWithContext
       (Proxy @Api)
@@ -74,7 +75,7 @@ api = do
 eventLog :: (MonadIO m, MonadConc m) => m ()
 eventLog = forever do
   putTextLn "Fake event log"
-  Concurrent.threadDelay (5 * 1000000)
+  Concurrent.threadDelay (5 * 1_000_000)
 
 
 --------------------------------------------------------------------------------
