@@ -11,12 +11,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Converge.Api
-  ( Api
-  , server
-  , gitHubKey
-  )
-where
+module Converge.Api (run) where
 
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
@@ -26,10 +21,21 @@ import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
+import qualified Network.Wai.Handler.Warp as Warp
 import Polysemy (Member, Sem, runM)
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as ServantGW
+
+
+run :: MonadIO m => Int -> ByteString -> m ()
+run port secret = do
+  putTextLn [i|Running at http://localhost:#{port}|]
+  liftIO $ Warp.run port
+    (Servant.serveWithContext
+      (Proxy @Api)
+      (gitHubKey (pure secret) :. Servant.EmptyContext)
+      server)
 
 
 --------------------------------------------------------------------------------
