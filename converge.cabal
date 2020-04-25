@@ -33,6 +33,7 @@ common common
     DeriveGeneric
     DerivingStrategies
     GeneralizedNewtypeDeriving
+    LambdaCase
     OverloadedStrings
   ghc-options:
     -Wall
@@ -64,9 +65,8 @@ library
   import: common
   hs-source-dirs: src
   exposed-modules:
-    Control.Carrier.Log.IO
-    Control.Effect.Log
     Converge
+    Effect.Log
     GitHub.Carrier.IssueComments.IO
     GitHub.Carrier.IssueComments.Pure
     GitHub.Carrier.PullRequestComments.IO

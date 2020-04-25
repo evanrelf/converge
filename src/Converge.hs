@@ -23,8 +23,6 @@ module Converge where
 
 import Prelude hiding (id)
 
-import Control.Algebra (Has)
-import Control.Carrier.Lift (runM)
 import Control.Concurrent.Classy (MonadConc)
 import qualified Control.Concurrent.Classy as Concurrent
 import qualified Control.Concurrent.Classy.Async as Async
@@ -39,11 +37,12 @@ import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
 import qualified Network.Wai.Handler.Warp as Warp
 import Optics ((%), at, ix, over, sans, set)
+import Polysemy (Member, Sem, runM)
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as ServantGW
 
-import Control.Carrier.Log.IO (Log, Verbosity (..), log, runLog)
+import Effect.Log (Log, Verbosity (..), log, runLogIO)
 
 
 --------------------------------------------------------------------------------
@@ -162,11 +161,11 @@ onHealthCheck :: Servant.Handler Text
 onHealthCheck = pure "All good"
 
 
-onPing :: Has Log sig m => Data.PingEvent -> m ()
+onPing :: Member Log r => Data.PingEvent -> Sem r ()
 onPing _event = log Debug "Pong!"
 
 
-onPullRequest :: Has Log sig m => Events.PullRequestEvent -> m ()
+onPullRequest :: Member Log r => Events.PullRequestEvent -> Sem r ()
 onPullRequest Events.PullRequestEvent{..} = do
   case evPullReqAction of
     Events.PullRequestAssignedAction -> do
@@ -209,7 +208,7 @@ onPullRequest Events.PullRequestEvent{..} = do
       log Debug [i|Pull request ##{evPullReqNumber}: unknown action '#{other}'|]
 
 
-onIssueComment :: Has Log sig m => Events.IssueCommentEvent -> m ()
+onIssueComment :: Member Log r => Events.IssueCommentEvent -> Sem r ()
 onIssueComment Events.IssueCommentEvent{..} = do
   let Payload.HookIssue{whIssueNumber} = evIssueCommentIssue
   let Payload.HookIssueComment{whIssueCommentBody, whIssueCommentUser} = evIssueCommentPayload
@@ -236,12 +235,12 @@ onIssueComment Events.IssueCommentEvent{..} = do
       log Debug [i|Issue ##{whIssueNumber}: unknown comment action '#{other}'|]
 
 
-onPush :: Has Log sig m => Events.PushEvent -> m ()
+onPush :: Member Log r => Events.PushEvent -> Sem r ()
 onPush Events.PushEvent{..} = do
   log Debug "Push event"
 
 
-onCheckSuite :: Has Log sig m => Events.CheckSuiteEvent -> m ()
+onCheckSuite :: Member Log r => Events.CheckSuiteEvent -> Sem r ()
 onCheckSuite Events.CheckSuiteEvent{..} = do
   case evCheckSuiteAction of
     Events.CheckSuiteEventActionCompleted -> do
@@ -257,7 +256,7 @@ onCheckSuite Events.CheckSuiteEvent{..} = do
       log Debug [i|Check suite: Unknown action '#{other}'|]
 
 
-onUnknown :: Has Log sig m => Aeson.Value -> m Servant.NoContent
+onUnknown :: Member Log r => Aeson.Value -> Sem r Servant.NoContent
 onUnknown value = do
   log Vomit ("Unknown request: " <> toText (Aeson.encodeToLazyText value))
   pure Servant.NoContent
@@ -269,12 +268,12 @@ server = webhookServer :<|> debugServer
 
 webhookServer :: Servant.Server WebhookApi
 webhookServer =
-       webhookHandler (runM . runLog verbosity . onPing)
-  :<|> webhookHandler (runM . runLog verbosity . onPullRequest)
-  :<|> webhookHandler (runM . runLog verbosity . onIssueComment)
-  :<|> webhookHandler (runM . runLog verbosity . onPush)
-  :<|> webhookHandler (runM . runLog verbosity . onCheckSuite)
-  :<|> runM . runLog verbosity . onUnknown
+       webhookHandler (runM . runLogIO verbosity . onPing)
+  :<|> webhookHandler (runM . runLogIO verbosity . onPullRequest)
+  :<|> webhookHandler (runM . runLogIO verbosity . onIssueComment)
+  :<|> webhookHandler (runM . runLogIO verbosity . onPush)
+  :<|> webhookHandler (runM . runLogIO verbosity . onCheckSuite)
+  :<|> runM . runLogIO verbosity . onUnknown
   where verbosity = Vomit
 
 
