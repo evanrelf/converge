@@ -42,6 +42,16 @@ common common
     -fshow-warning-groups
 
 
+common polysemy-plugin
+  build-depends:
+    , polysemy-plugin
+  ghc-options:
+    -fplugin=Polysemy.Plugin
+    -O2
+    -flate-specialise
+    -fspecialise-aggressively
+
+
 common execuable
   ghc-options:
     -threaded
@@ -50,7 +60,7 @@ common execuable
 
 
 library
-  import: common
+  import: common, polysemy-plugin
   hs-source-dirs: src
   exposed-modules:
     Converge
@@ -69,7 +79,6 @@ library
     , github-webhooks
     , optics
     , polysemy
-    , polysemy-plugin
     , servant-github-webhook
     , servant-server
     , string-interpolate
@@ -77,11 +86,6 @@ library
     , time
     , vector
     , warp
-  ghc-options:
-    -fplugin=Polysemy.Plugin
-    -O2
-    -flate-specialise
-    -fspecialise-aggressively
 
 
 executable converge
