@@ -66,6 +66,7 @@ library
     Converge
     Converge.Api
     Effect.GitHub.IssueComments
+    Effect.GitHub.IssueLabels
     Effect.GitHub.PullRequestComments
     Effect.Log
     Polysemy.Input.Extra
