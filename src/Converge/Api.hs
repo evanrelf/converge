@@ -262,12 +262,13 @@ type family ToWebhookEvent (event :: Type) :: ServantGW.RepoWebhookEvent where
 
 
 webhookHandler
-  :: forall event
-   . ServantGW.Reflect (ToWebhookEvent event)
-  => (event -> Servant.Handler ())
+  :: forall event m
+   . Monad m
+  => ServantGW.Reflect (ToWebhookEvent event)
+  => (event -> m ())
   -> ServantGW.RepoWebhookEvent
   -> ((), event)
-  -> Servant.Handler Servant.NoContent
+  -> m Servant.NoContent
 webhookHandler handler repoWebhookEvent ((), event) = do
   let proxy = Proxy @(ToWebhookEvent event)
   when (repoWebhookEvent == ServantGW.reflect proxy) (handler event)
