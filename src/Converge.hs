@@ -17,9 +17,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
-
 module Converge where
-
 
 import Prelude hiding (id)
 
