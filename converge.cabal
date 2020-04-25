@@ -67,9 +67,8 @@ library
   exposed-modules:
     Converge
     Effect.GitHub.IssueComments
+    Effect.GitHub.PullRequestComments
     Effect.Log
-    GitHub.Carrier.PullRequestComments.IO
-    GitHub.Effect.PullRequestComments
   build-depends:
     , aeson
     , concurrency
