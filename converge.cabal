@@ -2,20 +2,13 @@ cabal-version: 2.2
 
 name:        converge
 version:     0.0.0.0
--- synopsis:
--- description:
+synopsis:    GitHub merge automation bot
+description: GitHub merge automation bot
 author:      Evan Relf <evan@evanrelf.com>
 maintainer:  Evan Relf <evan@evanrelf.com>
 homepage:    https://github.com/evanrelf/converge
-bug-reports: https://github.com/evanrelf/converge/issues
 license:     ISC
 copyright:   2020 Evan Relf
-build-type:  Simple
-
-
---------------------------------------------------------------------------------
--- Common
---------------------------------------------------------------------------------
 
 
 common common
@@ -56,11 +49,6 @@ common execuable
     -with-rtsopts=-N
 
 
---------------------------------------------------------------------------------
--- Libraries
---------------------------------------------------------------------------------
-
-
 library
   import: common
   hs-source-dirs: src
@@ -96,22 +84,12 @@ library
     -fspecialise-aggressively
 
 
---------------------------------------------------------------------------------
--- Executables
---------------------------------------------------------------------------------
-
-
 executable converge
   import: common, execuable
   main-is: Main.hs
   hs-source-dirs: app
   build-depends:
     , converge
-
-
---------------------------------------------------------------------------------
--- Tests
---------------------------------------------------------------------------------
 
 
 test-suite test
