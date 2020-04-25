@@ -49,6 +49,7 @@ type Api = WebhookApi :<|> DebugApi
 type WebhookApi = Asum
   [ Webhook Data.PingEvent           :# "Ping from GitHub"
   , Webhook Events.PullRequestEvent  :# "Pull request event from GitHub"
+  , Webhook Events.IssuesEvent       :# "Issue event from GitHub"
   , Webhook Events.IssueCommentEvent :# "Issue comment event from GitHub"
   , Webhook Events.PushEvent         :# "Push event from GitHub"
   , Webhook Events.CheckSuiteEvent   :# "Check suite event from GitHub"
@@ -84,6 +85,7 @@ webhookServer :: Servant.Server WebhookApi
 webhookServer =
        webhookHandler (runM . runLogIO verbosity . onPing)
   :<|> webhookHandler (runM . runLogIO verbosity . onPullRequest)
+  :<|> webhookHandler (runM . runLogIO verbosity . onIssue)
   :<|> webhookHandler (runM . runLogIO verbosity . onIssueComment)
   :<|> webhookHandler (runM . runLogIO verbosity . onPush)
   :<|> webhookHandler (runM . runLogIO verbosity . onCheckSuite)
@@ -143,6 +145,45 @@ onPullRequest Events.PullRequestEvent{..} = do
 
     Events.PullRequestActionOther other -> do
       log Debug [i|Pull request ##{evPullReqNumber}: unknown action '#{other}'|]
+
+
+onIssue :: Member Log r => Events.IssuesEvent -> Sem r ()
+onIssue Events.IssuesEvent{..} = do
+  let Payload.HookIssue{whIssueNumber} = evIssuesEventIssue
+
+  case evIssuesEventAction of
+    Events.IssuesAssignedAction -> do
+      log Debug [i|Issue ##{whIssueNumber}: assigned|]
+
+    Events.IssuesUnassignedAction -> do
+      log Debug [i|Issue ##{whIssueNumber}: unassigned|]
+
+    Events.IssuesLabeledAction -> do
+      log Debug [i|Issue ##{whIssueNumber}: labeled|]
+
+    Events.IssuesUnlabeledAction -> do
+      log Debug [i|Issue ##{whIssueNumber}: unlabeled|]
+
+    Events.IssuesOpenedAction -> do
+      log Debug [i|Issue ##{whIssueNumber}: opened|]
+
+    Events.IssuesEditedAction -> do
+      log Debug [i|Issue ##{whIssueNumber}: edited|]
+
+    Events.IssuesMilestonedAction -> do
+      log Debug [i|Issue ##{whIssueNumber}: milestoned|]
+
+    Events.IssuesDemilestonedAction -> do
+      log Debug [i|Issue ##{whIssueNumber}: demilestoned|]
+
+    Events.IssuesClosedAction -> do
+      log Debug [i|Issue ##{whIssueNumber}: closed|]
+
+    Events.IssuesReopenedAction -> do
+      log Debug [i|Issue ##{whIssueNumber}: reopened|]
+
+    Events.IssuesActionOther other -> do
+      log Debug [i|Issue ##{whIssueNumber}: unknown action '#{other}'|]
 
 
 onIssueComment :: Member Log r => Events.IssueCommentEvent -> Sem r ()
@@ -214,6 +255,7 @@ type Webhook (event :: Type) =
 type family ToWebhookEvent (event :: Type) :: ServantGW.RepoWebhookEvent where
   ToWebhookEvent Data.PingEvent = 'Data.WebhookPingEvent
   ToWebhookEvent Events.PullRequestEvent = 'Data.WebhookPullRequestEvent
+  ToWebhookEvent Events.IssuesEvent = 'Data.WebhookIssuesEvent
   ToWebhookEvent Events.IssueCommentEvent = 'Data.WebhookIssueCommentEvent
   ToWebhookEvent Events.PushEvent = 'Data.WebhookPushEvent
   ToWebhookEvent Events.CheckSuiteEvent = 'Data.WebhookCheckSuiteEvent
