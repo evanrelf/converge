@@ -66,6 +66,7 @@ library
   hs-source-dirs: src
   exposed-modules:
     Converge
+    Converge.Api
     Effect.GitHub.IssueComments
     Effect.GitHub.PullRequestComments
     Effect.Log
