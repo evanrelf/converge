@@ -4,8 +4,8 @@
 }:
 mkDerivation {
   pname = "github-webhooks";
-  version = "0.12.0";
-  sha256 = "d014c4326b70fafd9e63c4f52a567423c21fed2328538a1bcdea1c7a854a025c";
+  version = "0.13.0";
+  sha256 = "fe9844ab6b97e36f8d7b33cece150f5ba66561af20e2cfcbd9b8a6565f9fd823";
   libraryHaskellDepends = [
     aeson base base16-bytestring bytestring cryptonite deepseq
     deepseq-generics memory text time vector
