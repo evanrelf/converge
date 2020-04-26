@@ -8,8 +8,8 @@
 
 module Effect.GitHub.IssueComments
   ( IssueComments (..)
-  , getComment
-  , getComments
+  , comment
+  , comments
   , createComment
   , deleteComment
   , editComment
@@ -26,8 +26,8 @@ import Polysemy.Error (Error, fromEither, runError)
 
 
 data IssueComments m a where
-  GetComment :: G.Id G.Comment -> IssueComments m G.IssueComment
-  GetComments :: G.IssueNumber -> G.FetchCount -> IssueComments m (Vector G.IssueComment)
+  Comment :: G.Id G.Comment -> IssueComments m G.IssueComment
+  Comments :: G.IssueNumber -> G.FetchCount -> IssueComments m (Vector G.IssueComment)
   CreateComment :: G.IssueNumber -> Text -> IssueComments m G.Comment
   DeleteComment :: G.Id G.Comment -> IssueComments m ()
   EditComment :: G.Id G.Comment -> Text -> IssueComments m G.Comment
@@ -54,10 +54,10 @@ runIssueCommentsIO
 runIssueCommentsIO auth owner repo
   = runError
   . reinterpret \case
-    GetComment commentId -> up . github auth $
+    Comment commentId -> up . github auth $
       Fns.commentR owner repo commentId
 
-    GetComments issueNumber fetchCount -> up . github auth $
+    Comments issueNumber fetchCount -> up . github auth $
       Fns.commentsR owner repo issueNumber fetchCount
 
     CreateComment issueNumber body -> up . github auth $

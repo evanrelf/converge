@@ -8,7 +8,7 @@
 
 module Effect.GitHub.IssueLabels
   ( IssueLabels (..)
-  , getLabels
+  , labels
   , addLabels
   , replaceAllLabels
   , removeLabel
@@ -26,7 +26,7 @@ import Polysemy.Error (Error, fromEither, runError)
 
 
 data IssueLabels m a where
-  GetLabels :: G.Id G.Issue -> G.FetchCount -> IssueLabels m (Vector G.IssueLabel)
+  Labels :: G.Id G.Issue -> G.FetchCount -> IssueLabels m (Vector G.IssueLabel)
   AddLabels :: Foldable f => G.Id G.Issue -> f (G.Name G.IssueLabel) -> IssueLabels m (Vector G.IssueLabel)
   ReplaceAllLabels :: Foldable f => G.Id G.Issue -> f (G.Name G.IssueLabel) -> IssueLabels m (Vector G.IssueLabel)
   RemoveLabel :: G.Id G.Issue -> G.Name G.IssueLabel -> IssueLabels m ()
@@ -54,7 +54,7 @@ runIssueLabelsIO
 runIssueLabelsIO auth owner repo
   = runError
   . reinterpret \case
-    GetLabels issueId fetchCount -> up . github auth $
+    Labels issueId fetchCount -> up . github auth $
       Fns.labelsOnIssueR owner repo issueId fetchCount
 
     AddLabels issueId issueLabelNames -> up . github auth $

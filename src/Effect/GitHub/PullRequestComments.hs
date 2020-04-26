@@ -8,8 +8,8 @@
 
 module Effect.GitHub.PullRequestComments
   ( PullRequestComments (..)
-  , getComment
-  , getComments
+  , comment
+  , comments
   , createComment
   , runPullRequestCommentsIO
   )
@@ -24,8 +24,8 @@ import Polysemy.Error (Error, fromEither, runError)
 
 
 data PullRequestComments m a where
-  GetComment :: G.Id G.Comment -> PullRequestComments m G.Comment
-  GetComments :: G.IssueNumber -> G.FetchCount -> PullRequestComments m (Vector G.Comment)
+  Comment :: G.Id G.Comment -> PullRequestComments m G.Comment
+  Comments :: G.IssueNumber -> G.FetchCount -> PullRequestComments m (Vector G.Comment)
   CreateComment :: G.IssueNumber -> Text -> Text -> Int -> Text -> PullRequestComments m G.Comment
 
 makeSem ''PullRequestComments
@@ -50,10 +50,10 @@ runPullRequestCommentsIO
 runPullRequestCommentsIO auth owner repo
   = runError
   . reinterpret \case
-    GetComment commentId -> up . github auth $
+    Comment commentId -> up . github auth $
       Fns.pullRequestCommentR owner repo commentId
 
-    GetComments issueNumber fetchCount -> up . github auth $
+    Comments issueNumber fetchCount -> up . github auth $
       Fns.pullRequestCommentsR owner repo issueNumber fetchCount
 
     CreateComment issueNumber commit path position body -> up . github auth $

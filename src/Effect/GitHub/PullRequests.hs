@@ -11,7 +11,7 @@ module Effect.GitHub.PullRequests
   , pullRequest
   , pullRequests
   , createPullRequest
-  , updatePullRequest
+  , editPullRequest
   , pullRequestCommits
   , pullRequestFiles
   , isPullRequestMerged
@@ -32,7 +32,7 @@ data PullRequests m a where
   PullRequest :: G.IssueNumber -> PullRequests m G.PullRequest
   PullRequests :: G.PullRequestMod -> G.FetchCount -> PullRequests m (Vector G.SimplePullRequest)
   CreatePullRequest :: G.CreatePullRequest -> PullRequests m G.PullRequest
-  UpdatePullRequest :: G.IssueNumber -> G.EditPullRequest -> PullRequests m G.PullRequest
+  EditPullRequest :: G.IssueNumber -> G.EditPullRequest -> PullRequests m G.PullRequest
   PullRequestCommits :: G.IssueNumber -> G.FetchCount -> PullRequests m (Vector G.Commit)
   PullRequestFiles :: G.IssueNumber -> G.FetchCount -> PullRequests m (Vector G.File)
   IsPullRequestMerged :: G.IssueNumber -> PullRequests m Bool
@@ -69,8 +69,8 @@ runPullRequestsIO auth owner repo
     CreatePullRequest createPullRequest' -> up . github auth $
       Fns.createPullRequestR owner repo createPullRequest'
 
-    UpdatePullRequest issueNumber editPullRequest -> up . github auth $
-      Fns.updatePullRequestR owner repo issueNumber editPullRequest
+    EditPullRequest issueNumber editPullRequest' -> up . github auth $
+      Fns.updatePullRequestR owner repo issueNumber editPullRequest'
 
     PullRequestCommits issueNumber fetchCount -> up . github auth $
       Fns.pullRequestCommitsR owner repo issueNumber fetchCount
