@@ -18,8 +18,7 @@ module Effect.GitHub.IssueLabels
 where
 
 import Data.Vector (Vector)
-import GitHub.Data (FetchCount, Id, Issue, IssueLabel)
-import GitHub.Data as G (Auth, Error, Name, Owner, Repo)
+import GitHub.Data as G (Auth, Error, FetchCount, Id, Issue, IssueLabel, Name, Owner, Repo)
 import GitHub.Endpoints.Issues.Labels
   ( addLabelsToIssueR
   , labelsOnIssueR

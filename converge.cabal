@@ -68,6 +68,7 @@ library
     Effect.GitHub.IssueComments
     Effect.GitHub.IssueLabels
     Effect.GitHub.PullRequestComments
+    Effect.GitHub.PullRequestReviews
     Effect.Log
     Polysemy.Input.Extra
     Polysemy.Output.Extra
