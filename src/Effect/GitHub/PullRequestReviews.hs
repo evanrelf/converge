@@ -8,9 +8,9 @@
 
 module Effect.GitHub.PullRequestReviews
   ( PullRequestReviews
-  , getReview
-  , getReviews
-  , getReviewComments
+  , review
+  , reviews
+  , reviewComments
   , runPullRequestReviewsIO
   )
 where
@@ -25,9 +25,9 @@ import Polysemy.Error (Error, fromEither, runError)
 
 
 data PullRequestReviews m a where
-  GetReview :: G.IssueNumber -> G.Id G.Review -> PullRequestReviews m G.Review
-  GetReviews :: G.IssueNumber -> G.FetchCount -> PullRequestReviews m (Vector G.Review)
-  GetReviewComments :: G.IssueNumber -> G.Id G.Review -> PullRequestReviews m (Vector G.ReviewComment)
+  Review :: G.IssueNumber -> G.Id G.Review -> PullRequestReviews m G.Review
+  Reviews :: G.IssueNumber -> G.FetchCount -> PullRequestReviews m (Vector G.Review)
+  ReviewComments :: G.IssueNumber -> G.Id G.Review -> PullRequestReviews m (Vector G.ReviewComment)
 
 makeSem ''PullRequestReviews
 
@@ -51,11 +51,11 @@ runPullRequestReviewsIO
 runPullRequestReviewsIO auth owner repo
   = runError
   . reinterpret \case
-    GetReview issueNumber reviewId -> up . github auth $
+    Review issueNumber reviewId -> up . github auth $
       Fns.pullRequestReviewR owner repo issueNumber reviewId
 
-    GetReviews issueNumber fetchCount -> up . github auth $
+    Reviews issueNumber fetchCount -> up . github auth $
       Fns.pullRequestReviewsR owner repo issueNumber fetchCount
 
-    GetReviewComments issueNumber reviewId -> fmap Vector.fromList . up . github auth $
+    ReviewComments issueNumber reviewId -> fmap Vector.fromList . up . github auth $
       Fns.pullRequestReviewCommentsR owner repo issueNumber reviewId
