@@ -21,29 +21,29 @@ module Effect.GitHub.PullRequests
 where
 
 import Data.Vector (Vector)
-import GitHub.Data as G (Auth, Error, FetchCount, IssueNumber, Name, Owner, Repo, MergeResult, File, Commit, EditPullRequest, SimplePullRequest, PullRequestMod, PullRequest, CreatePullRequest)
+import qualified GitHub.Data as G
 import qualified GitHub.Endpoints.PullRequests as Fns
 import GitHub.Request (github)
 import Polysemy
-import Polysemy.Error as P (Error, fromEither, runError)
+import Polysemy.Error (Error, fromEither, runError)
 
 
 data PullRequests m a where
-  PullRequest :: IssueNumber -> PullRequests m PullRequest
-  PullRequests :: PullRequestMod -> FetchCount -> PullRequests m (Vector SimplePullRequest)
-  CreatePullRequest :: CreatePullRequest -> PullRequests m PullRequest
-  UpdatePullRequest :: IssueNumber -> EditPullRequest -> PullRequests m PullRequest
-  PullRequestCommits :: IssueNumber -> FetchCount -> PullRequests m (Vector Commit)
-  PullRequestFiles :: IssueNumber -> FetchCount -> PullRequests m (Vector File)
-  IsPullRequestMerged :: IssueNumber -> PullRequests m Bool
-  MergePullRequest :: IssueNumber -> Maybe Text -> PullRequests m MergeResult
+  PullRequest :: G.IssueNumber -> PullRequests m G.PullRequest
+  PullRequests :: G.PullRequestMod -> G.FetchCount -> PullRequests m (Vector G.SimplePullRequest)
+  CreatePullRequest :: G.CreatePullRequest -> PullRequests m G.PullRequest
+  UpdatePullRequest :: G.IssueNumber -> G.EditPullRequest -> PullRequests m G.PullRequest
+  PullRequestCommits :: G.IssueNumber -> G.FetchCount -> PullRequests m (Vector G.Commit)
+  PullRequestFiles :: G.IssueNumber -> G.FetchCount -> PullRequests m (Vector G.File)
+  IsPullRequestMerged :: G.IssueNumber -> PullRequests m Bool
+  MergePullRequest :: G.IssueNumber -> Maybe Text -> PullRequests m G.MergeResult
 
 makeSem ''PullRequests
 
 
 up
   :: MonadIO m
-  => Members '[P.Error e, Embed m] r
+  => Members '[Error e, Embed m] r
   => IO (Either e a)
   -> Sem r a
 up = fromEither <=< embed . liftIO
@@ -52,9 +52,9 @@ up = fromEither <=< embed . liftIO
 runPullRequestsIO
   :: MonadIO m
   => Member (Embed m) r
-  => Auth
-  -> Name Owner
-  -> Name Repo
+  => G.Auth
+  -> G.Name G.Owner
+  -> G.Name G.Repo
   -> Sem (PullRequests ': r) a
   -> Sem r (Either G.Error a)
 runPullRequestsIO auth owner repo

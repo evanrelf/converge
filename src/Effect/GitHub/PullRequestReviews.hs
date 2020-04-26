@@ -15,25 +15,26 @@ module Effect.GitHub.PullRequestReviews
   )
 where
 
-import Data.Vector as V (Vector, fromList)
-import GitHub.Data as G (Auth, Error, FetchCount, Id, IssueNumber, Name, Owner, Repo, Review, ReviewComment)
+import Data.Vector (Vector)
+import qualified Data.Vector as Vector
+import qualified GitHub.Data as G
 import qualified GitHub.Endpoints.PullRequests.Reviews as Fns
 import GitHub.Request (github)
 import Polysemy
-import Polysemy.Error as P (Error, fromEither, runError)
+import Polysemy.Error (Error, fromEither, runError)
 
 
 data PullRequestReviews m a where
-  GetReview :: IssueNumber -> Id Review -> PullRequestReviews m Review
-  GetReviews :: IssueNumber -> FetchCount -> PullRequestReviews m (Vector Review)
-  GetReviewComments :: IssueNumber -> Id Review -> PullRequestReviews m (Vector ReviewComment)
+  GetReview :: G.IssueNumber -> G.Id G.Review -> PullRequestReviews m G.Review
+  GetReviews :: G.IssueNumber -> G.FetchCount -> PullRequestReviews m (Vector G.Review)
+  GetReviewComments :: G.IssueNumber -> G.Id G.Review -> PullRequestReviews m (Vector G.ReviewComment)
 
 makeSem ''PullRequestReviews
 
 
 up
   :: MonadIO m
-  => Members '[P.Error e, Embed m] r
+  => Members '[Error e, Embed m] r
   => IO (Either e a)
   -> Sem r a
 up = fromEither <=< embed . liftIO
@@ -42,9 +43,9 @@ up = fromEither <=< embed . liftIO
 runPullRequestReviewsIO
   :: MonadIO m
   => Member (Embed m) r
-  => Auth
-  -> Name Owner
-  -> Name Repo
+  => G.Auth
+  -> G.Name G.Owner
+  -> G.Name G.Repo
   -> Sem (PullRequestReviews ': r) a
   -> Sem r (Either G.Error a)
 runPullRequestReviewsIO auth owner repo
@@ -56,5 +57,5 @@ runPullRequestReviewsIO auth owner repo
     GetReviews issueNumber fetchCount -> up . github auth $
       Fns.pullRequestReviewsR owner repo issueNumber fetchCount
 
-    GetReviewComments issueNumber reviewId -> fmap V.fromList . up . github auth $
+    GetReviewComments issueNumber reviewId -> fmap Vector.fromList . up . github auth $
       Fns.pullRequestReviewCommentsR owner repo issueNumber reviewId
