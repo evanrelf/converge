@@ -16,24 +16,24 @@ module Effect.GitHub.PullRequestComments
 where
 
 import Data.Vector (Vector)
-import GitHub.Data as G (Auth, Comment, Error, FetchCount, Id, IssueNumber, Name, Owner, Repo)
+import qualified GitHub.Data as G
 import qualified GitHub.Endpoints.PullRequests.Comments as Fns
 import GitHub.Request (github)
 import Polysemy
-import Polysemy.Error as P (Error, fromEither, runError)
+import Polysemy.Error (Error, fromEither, runError)
 
 
 data PullRequestComments m a where
-  GetComment :: Id Comment -> PullRequestComments m Comment
-  GetComments :: IssueNumber -> FetchCount -> PullRequestComments m (Vector Comment)
-  CreateComment :: IssueNumber -> Text -> Text -> Int -> Text -> PullRequestComments m Comment
+  GetComment :: G.Id G.Comment -> PullRequestComments m G.Comment
+  GetComments :: G.IssueNumber -> G.FetchCount -> PullRequestComments m (Vector G.Comment)
+  CreateComment :: G.IssueNumber -> Text -> Text -> Int -> Text -> PullRequestComments m G.Comment
 
 makeSem ''PullRequestComments
 
 
 up
   :: MonadIO m
-  => Members '[P.Error e, Embed m] r
+  => Members '[Error e, Embed m] r
   => IO (Either e a)
   -> Sem r a
 up = fromEither <=< embed . liftIO
@@ -42,9 +42,9 @@ up = fromEither <=< embed . liftIO
 runPullRequestCommentsIO
   :: MonadIO m
   => Member (Embed m) r
-  => Auth
-  -> Name Owner
-  -> Name Repo
+  => G.Auth
+  -> G.Name G.Owner
+  -> G.Name G.Repo
   -> Sem (PullRequestComments ': r) a
   -> Sem r (Either G.Error a)
 runPullRequestCommentsIO auth owner repo

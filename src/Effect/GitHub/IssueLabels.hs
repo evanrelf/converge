@@ -18,26 +18,26 @@ module Effect.GitHub.IssueLabels
 where
 
 import Data.Vector (Vector)
-import GitHub.Data as G (Auth, Error, FetchCount, Id, Issue, IssueLabel, Name, Owner, Repo)
+import qualified GitHub.Data as G
 import qualified GitHub.Endpoints.Issues.Labels as Fns
 import GitHub.Request (github)
 import Polysemy
-import Polysemy.Error as P (Error, fromEither, runError)
+import Polysemy.Error (Error, fromEither, runError)
 
 
 data IssueLabels m a where
-  GetLabels :: Id Issue -> FetchCount -> IssueLabels m (Vector IssueLabel)
-  AddLabels :: Foldable f => Id Issue -> f (Name IssueLabel) -> IssueLabels m (Vector IssueLabel)
-  ReplaceAllLabels :: Foldable f => Id Issue -> f (Name IssueLabel) -> IssueLabels m (Vector IssueLabel)
-  RemoveLabel :: Id Issue -> Name IssueLabel -> IssueLabels m ()
-  RemoveAllLabels :: Id Issue -> IssueLabels m ()
+  GetLabels :: G.Id G.Issue -> G.FetchCount -> IssueLabels m (Vector G.IssueLabel)
+  AddLabels :: Foldable f => G.Id G.Issue -> f (G.Name G.IssueLabel) -> IssueLabels m (Vector G.IssueLabel)
+  ReplaceAllLabels :: Foldable f => G.Id G.Issue -> f (G.Name G.IssueLabel) -> IssueLabels m (Vector G.IssueLabel)
+  RemoveLabel :: G.Id G.Issue -> G.Name G.IssueLabel -> IssueLabels m ()
+  RemoveAllLabels :: G.Id G.Issue -> IssueLabels m ()
 
 makeSem ''IssueLabels
 
 
 up
   :: MonadIO m
-  => Members '[P.Error e, Embed m] r
+  => Members '[Error e, Embed m] r
   => IO (Either e a)
   -> Sem r a
 up = fromEither <=< embed . liftIO
@@ -46,9 +46,9 @@ up = fromEither <=< embed . liftIO
 runIssueLabelsIO
   :: MonadIO m
   => Member (Embed m) r
-  => Auth
-  -> Name Owner
-  -> Name Repo
+  => G.Auth
+  -> G.Name G.Owner
+  -> G.Name G.Repo
   -> Sem (IssueLabels ': r) a
   -> Sem r (Either G.Error a)
 runIssueLabelsIO auth owner repo

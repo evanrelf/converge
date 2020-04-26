@@ -18,26 +18,26 @@ module Effect.GitHub.IssueComments
 where
 
 import Data.Vector (Vector)
-import GitHub.Data as G (Auth, Comment, Error, FetchCount, Id, IssueComment, IssueNumber, Name, Owner, Repo)
+import qualified GitHub.Data as G
 import qualified GitHub.Endpoints.Issues.Comments as Fns
 import GitHub.Request (github)
 import Polysemy
-import Polysemy.Error as P (Error, fromEither, runError)
+import Polysemy.Error (Error, fromEither, runError)
 
 
 data IssueComments m a where
-  GetComment :: Id Comment -> IssueComments m IssueComment
-  GetComments :: IssueNumber -> FetchCount -> IssueComments m (Vector IssueComment)
-  CreateComment :: IssueNumber -> Text -> IssueComments m Comment
-  DeleteComment :: Id Comment -> IssueComments m ()
-  EditComment :: Id Comment -> Text -> IssueComments m Comment
+  GetComment :: G.Id G.Comment -> IssueComments m G.IssueComment
+  GetComments :: G.IssueNumber -> G.FetchCount -> IssueComments m (Vector G.IssueComment)
+  CreateComment :: G.IssueNumber -> Text -> IssueComments m G.Comment
+  DeleteComment :: G.Id G.Comment -> IssueComments m ()
+  EditComment :: G.Id G.Comment -> Text -> IssueComments m G.Comment
 
 makeSem ''IssueComments
 
 
 up
   :: MonadIO m
-  => Members '[P.Error e, Embed m] r
+  => Members '[Error e, Embed m] r
   => IO (Either e a)
   -> Sem r a
 up = fromEither <=< embed . liftIO
@@ -46,9 +46,9 @@ up = fromEither <=< embed . liftIO
 runIssueCommentsIO
   :: MonadIO m
   => Member (Embed m) r
-  => Auth
-  -> Name Owner
-  -> Name Repo
+  => G.Auth
+  -> G.Name G.Owner
+  -> G.Name G.Repo
   -> Sem (IssueComments ': r) a
   -> Sem r (Either G.Error a)
 runIssueCommentsIO auth owner repo
