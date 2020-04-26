@@ -16,13 +16,8 @@ module Effect.GitHub.PullRequestComments
 where
 
 import Data.Vector (Vector)
-import GitHub.Data (Comment, FetchCount, Id, IssueNumber)
-import GitHub.Data as G (Auth, Error, Name, Owner, Repo)
-import GitHub.Endpoints.PullRequests.Comments
-  ( createPullCommentR
-  , pullRequestCommentR
-  , pullRequestCommentsR
-  )
+import GitHub.Data as G (Auth, Comment, Error, FetchCount, Id, IssueNumber, Name, Owner, Repo)
+import qualified GitHub.Endpoints.PullRequests.Comments as Fns
 import GitHub.Request (github)
 import Polysemy
 import Polysemy.Error as P (Error, fromEither, runError)
@@ -56,10 +51,10 @@ runPullRequestCommentsIO auth owner repo
   = runError
   . reinterpret \case
     GetComment commentId -> up . github auth $
-      pullRequestCommentR owner repo commentId
+      Fns.pullRequestCommentR owner repo commentId
 
     GetComments issueNumber fetchCount -> up . github auth $
-      pullRequestCommentsR owner repo issueNumber fetchCount
+      Fns.pullRequestCommentsR owner repo issueNumber fetchCount
 
     CreateComment issueNumber commit path position body -> up . github auth $
-      createPullCommentR owner repo issueNumber commit path position body
+      Fns.createPullCommentR owner repo issueNumber commit path position body

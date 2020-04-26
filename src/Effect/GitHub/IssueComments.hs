@@ -18,15 +18,8 @@ module Effect.GitHub.IssueComments
 where
 
 import Data.Vector (Vector)
-import GitHub.Data (Comment, FetchCount, Id, IssueComment, IssueNumber)
-import GitHub.Data as G (Auth, Error, Name, Owner, Repo)
-import GitHub.Endpoints.Issues.Comments
-  ( commentR
-  , commentsR
-  , createCommentR
-  , deleteCommentR
-  , editCommentR
-  )
+import GitHub.Data as G (Auth, Comment, Error, FetchCount, Id, IssueComment, IssueNumber, Name, Owner, Repo)
+import qualified GitHub.Endpoints.Issues.Comments as Fns
 import GitHub.Request (github)
 import Polysemy
 import Polysemy.Error as P (Error, fromEither, runError)
@@ -62,16 +55,16 @@ runIssueCommentsIO auth owner repo
   = runError
   . reinterpret \case
     GetComment commentId -> up . github auth $
-      commentR owner repo commentId
+      Fns.commentR owner repo commentId
 
     GetComments issueNumber fetchCount -> up . github auth $
-      commentsR owner repo issueNumber fetchCount
+      Fns.commentsR owner repo issueNumber fetchCount
 
     CreateComment issueNumber body -> up . github auth $
-      createCommentR owner repo issueNumber body
+      Fns.createCommentR owner repo issueNumber body
 
     DeleteComment commentId -> up . github auth $
-      deleteCommentR owner repo commentId
+      Fns.deleteCommentR owner repo commentId
 
     EditComment commentId body -> up . github auth $
-      editCommentR owner repo commentId body
+      Fns.editCommentR owner repo commentId body

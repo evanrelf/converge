@@ -17,11 +17,7 @@ where
 
 import Data.Vector as V (Vector, fromList)
 import GitHub.Data as G (Auth, Error, FetchCount, Id, IssueNumber, Name, Owner, Repo, Review, ReviewComment)
-import GitHub.Endpoints.PullRequests.Reviews
-  ( pullRequestReviewCommentsR
-  , pullRequestReviewR
-  , pullRequestReviewsR
-  )
+import qualified GitHub.Endpoints.PullRequests.Reviews as Fns
 import GitHub.Request (github)
 import Polysemy
 import Polysemy.Error as P (Error, fromEither, runError)
@@ -55,10 +51,10 @@ runPullRequestReviewsIO auth owner repo
   = runError
   . reinterpret \case
     GetReview issueNumber reviewId -> up . github auth $
-      pullRequestReviewR owner repo issueNumber reviewId
+      Fns.pullRequestReviewR owner repo issueNumber reviewId
 
     GetReviews issueNumber fetchCount -> up . github auth $
-      pullRequestReviewsR owner repo issueNumber fetchCount
+      Fns.pullRequestReviewsR owner repo issueNumber fetchCount
 
     GetReviewComments issueNumber reviewId -> fmap V.fromList . up . github auth $
-      pullRequestReviewCommentsR owner repo issueNumber reviewId
+      Fns.pullRequestReviewCommentsR owner repo issueNumber reviewId
