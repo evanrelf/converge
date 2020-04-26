@@ -19,13 +19,7 @@ where
 
 import Data.Vector (Vector)
 import GitHub.Data as G (Auth, Error, FetchCount, Id, Issue, IssueLabel, Name, Owner, Repo)
-import GitHub.Endpoints.Issues.Labels
-  ( addLabelsToIssueR
-  , labelsOnIssueR
-  , removeAllLabelsFromIssueR
-  , removeLabelFromIssueR
-  , replaceAllLabelsForIssueR
-  )
+import qualified GitHub.Endpoints.Issues.Labels as Fns
 import GitHub.Request (github)
 import Polysemy
 import Polysemy.Error as P (Error, fromEither, runError)
@@ -61,16 +55,16 @@ runIssueLabelsIO auth owner repo
   = runError
   . reinterpret \case
     GetLabels issueId fetchCount -> up . github auth $
-      labelsOnIssueR owner repo issueId fetchCount
+      Fns.labelsOnIssueR owner repo issueId fetchCount
 
     AddLabels issueId issueLabelNames -> up . github auth $
-      addLabelsToIssueR owner repo issueId issueLabelNames
+      Fns.addLabelsToIssueR owner repo issueId issueLabelNames
 
     ReplaceAllLabels issueId issueLabelNames -> up . github auth $
-      replaceAllLabelsForIssueR owner repo issueId issueLabelNames
+      Fns.replaceAllLabelsForIssueR owner repo issueId issueLabelNames
 
     RemoveLabel issueId issueLabelName -> up . github auth $
-      removeLabelFromIssueR owner repo issueId issueLabelName
+      Fns.removeLabelFromIssueR owner repo issueId issueLabelName
 
     RemoveAllLabels issueId -> up . github auth $
-      removeAllLabelsFromIssueR owner repo issueId
+      Fns.removeAllLabelsFromIssueR owner repo issueId
