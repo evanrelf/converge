@@ -47,13 +47,14 @@ type Api = WebhookApi :<|> DebugApi
 
 
 type WebhookApi = Asum
-  [ Webhook Data.PingEvent           :# "Ping from GitHub"
-  , Webhook Events.PullRequestEvent  :# "Pull request event from GitHub"
-  , Webhook Events.IssuesEvent       :# "Issue event from GitHub"
-  , Webhook Events.IssueCommentEvent :# "Issue comment event from GitHub"
-  , Webhook Events.PushEvent         :# "Push event from GitHub"
-  , Webhook Events.CheckSuiteEvent   :# "Check suite event from GitHub"
-  , UnknownRequest                   :# "Unknown request to webhook path"
+  [ Webhook Data.PingEvent                :# "Ping"
+  , Webhook Events.PullRequestEvent       :# "Pull request event"
+  , Webhook Events.PullRequestReviewEvent :# "Pull request review event"
+  , Webhook Events.IssuesEvent            :# "Issue event"
+  , Webhook Events.IssueCommentEvent      :# "Issue comment event"
+  , Webhook Events.PushEvent              :# "Push event"
+  , Webhook Events.CheckSuiteEvent        :# "Check suite event"
+  , UnknownRequest                        :# "Unknown request"
   ]
 
 
@@ -85,6 +86,7 @@ webhookServer :: Servant.Server WebhookApi
 webhookServer =
        webhookHandler (runM . runLogIO verbosity . onPing)
   :<|> webhookHandler (runM . runLogIO verbosity . onPullRequest)
+  :<|> webhookHandler (runM . runLogIO verbosity . onPullRequestReview)
   :<|> webhookHandler (runM . runLogIO verbosity . onIssue)
   :<|> webhookHandler (runM . runLogIO verbosity . onIssueComment)
   :<|> webhookHandler (runM . runLogIO verbosity . onPush)
@@ -145,6 +147,24 @@ onPullRequest Events.PullRequestEvent{..} = do
 
     Events.PullRequestActionOther other -> do
       log Debug [i|Pull request ##{evPullReqNumber}: unknown action '#{other}'|]
+
+
+onPullRequestReview :: Member Log r => Events.PullRequestReviewEvent -> Sem r ()
+onPullRequestReview Events.PullRequestReviewEvent{..} = do
+  let Payload.HookPullRequest{whPullReqNumber} = evPullReqReviewTarget
+
+  case evPullReqReviewAction of
+    Events.PullRequestReviewSubmittedAction -> do
+      log Debug [i|Pull request ##{whPullReqNumber}: review submitted|]
+
+    Events.PullRequestReviewEditedAction -> do
+      log Debug [i|Pull request ##{whPullReqNumber}: review edited|]
+
+    Events.PullRequestReviewDismissedAction -> do
+      log Debug [i|Pull request ##{whPullReqNumber}: review dismissed|]
+
+    Events.PullRequestReviewActionOther other -> do
+      log Debug [i|Pull request ##{whPullReqNumber}: unknown review action '#{other}'|]
 
 
 onIssue :: Member Log r => Events.IssuesEvent -> Sem r ()
@@ -255,6 +275,7 @@ type Webhook (event :: Type) =
 type family ToWebhookEvent (event :: Type) :: ServantGW.RepoWebhookEvent where
   ToWebhookEvent Data.PingEvent = 'Data.WebhookPingEvent
   ToWebhookEvent Events.PullRequestEvent = 'Data.WebhookPullRequestEvent
+  ToWebhookEvent Events.PullRequestReviewEvent = 'Data.WebhookPullRequestReviewEvent
   ToWebhookEvent Events.IssuesEvent = 'Data.WebhookIssuesEvent
   ToWebhookEvent Events.IssueCommentEvent = 'Data.WebhookIssueCommentEvent
   ToWebhookEvent Events.PushEvent = 'Data.WebhookPushEvent
