@@ -53,6 +53,7 @@ type WebhookApi = Asum
   , Webhook Events.IssuesEvent            :# "Issue event"
   , Webhook Events.IssueCommentEvent      :# "Issue comment event"
   , Webhook Events.PushEvent              :# "Push event"
+  , Webhook Events.StatusEvent            :# "Status event"
   , Webhook Events.CheckSuiteEvent        :# "Check suite event"
   , UnknownRequest                        :# "Unknown request"
   ]
@@ -90,6 +91,7 @@ webhookServer =
   :<|> webhookHandler (runM . runLogIO verbosity . onIssue)
   :<|> webhookHandler (runM . runLogIO verbosity . onIssueComment)
   :<|> webhookHandler (runM . runLogIO verbosity . onPush)
+  :<|> webhookHandler (runM . runLogIO verbosity . onStatus)
   :<|> webhookHandler (runM . runLogIO verbosity . onCheckSuite)
   :<|> runM . runLogIO verbosity . onUnknown
   where verbosity = Vomit
@@ -229,6 +231,11 @@ onPush Events.PushEvent{..} = do
   log Debug "Push event"
 
 
+onStatus :: Member Log r => Events.StatusEvent -> Sem r ()
+onStatus Events.StatusEvent{..} = do
+  log Debug "Status event"
+
+
 onCheckSuite :: Member Log r => Events.CheckSuiteEvent -> Sem r ()
 onCheckSuite Events.CheckSuiteEvent{..} = do
   case evCheckSuiteAction of
@@ -279,6 +286,7 @@ type family ToWebhookEvent (event :: Type) :: ServantGW.RepoWebhookEvent where
   ToWebhookEvent Events.IssuesEvent = 'Data.WebhookIssuesEvent
   ToWebhookEvent Events.IssueCommentEvent = 'Data.WebhookIssueCommentEvent
   ToWebhookEvent Events.PushEvent = 'Data.WebhookPushEvent
+  ToWebhookEvent Events.StatusEvent = 'Data.WebhookStatusEvent
   ToWebhookEvent Events.CheckSuiteEvent = 'Data.WebhookCheckSuiteEvent
 
 
