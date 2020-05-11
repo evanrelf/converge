@@ -1,5 +1,7 @@
 module Converge.State where
 
+import Generic.Data (Generically (..))
+
 
 data PullRequestState
   = Draft
@@ -18,4 +20,5 @@ data PullRequest = PullRequest
 
 data World = World
   { pullRequests :: Map Natural PullRequest
-  } deriving stock Show
+  } deriving stock (Generic, Show)
+    deriving (Semigroup, Monoid) via Generically World
