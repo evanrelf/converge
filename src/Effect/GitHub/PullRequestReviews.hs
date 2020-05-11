@@ -11,7 +11,7 @@ module Effect.GitHub.PullRequestReviews
   , review
   , reviews
   , reviewComments
-  , runPullRequestReviewsIO
+  , pullRequestReviewsToIO
   )
 where
 
@@ -40,7 +40,7 @@ up
 up = fromEither <=< embed . liftIO
 
 
-runPullRequestReviewsIO
+pullRequestReviewsToIO
   :: MonadIO m
   => Member (Embed m) r
   => G.Auth
@@ -48,7 +48,7 @@ runPullRequestReviewsIO
   -> G.Name G.Repo
   -> Sem (PullRequestReviews ': r) a
   -> Sem r (Either G.Error a)
-runPullRequestReviewsIO auth owner repo
+pullRequestReviewsToIO auth owner repo
   = runError
   . reinterpret \case
     Review issueNumber reviewId -> up . github auth $

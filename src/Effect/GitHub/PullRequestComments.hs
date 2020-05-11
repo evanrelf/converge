@@ -11,7 +11,7 @@ module Effect.GitHub.PullRequestComments
   , comment
   , comments
   , createComment
-  , runPullRequestCommentsIO
+  , pullRequestCommentsToIO
   )
 where
 
@@ -39,7 +39,7 @@ up
 up = fromEither <=< embed . liftIO
 
 
-runPullRequestCommentsIO
+pullRequestCommentsToIO
   :: MonadIO m
   => Member (Embed m) r
   => G.Auth
@@ -47,7 +47,7 @@ runPullRequestCommentsIO
   -> G.Name G.Repo
   -> Sem (PullRequestComments ': r) a
   -> Sem r (Either G.Error a)
-runPullRequestCommentsIO auth owner repo
+pullRequestCommentsToIO auth owner repo
   = runError
   . reinterpret \case
     Comment commentId -> up . github auth $

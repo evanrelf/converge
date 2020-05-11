@@ -11,7 +11,7 @@ module Effect.Log
   , printVerbosity
   , Log (..)
   , log
-  , runLogIO
+  , logToIO
   )
 where
 
@@ -43,13 +43,13 @@ data Log m a where
 makeSem ''Log
 
 
-runLogIO
+logToIO
   :: MonadIO m
   => Member (Embed m) r
   => Verbosity
   -> Sem (Log ': r) a
   -> Sem r a
-runLogIO verbosity = interpret \case
+logToIO verbosity = interpret \case
   Log messageVerbosity message -> embed do
     when (messageVerbosity >= verbosity)
       (liftIO (Text.hPutStrLn stderr (printVerbosity messageVerbosity <> " " <> message)))
