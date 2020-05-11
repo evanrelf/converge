@@ -1,19 +1,20 @@
-module Converge where
+module Converge (main) where
 
+import Control.Concurrent.STM.TVar (newTVar)
 import qualified Converge.Api as Api
 import Effect.Log (Verbosity (..), logToIO)
-import Polysemy
-import Polysemy.AtomicState (atomicStateToState)
+import Polysemy (runM)
+import Polysemy.AtomicState (runAtomicStateTVar)
 import Polysemy.IO (embedToMonadIO)
-import Polysemy.State (evalState)
 
 
 main :: IO ()
 main = do
+  worldTVar <- atomically (newTVar mempty)
+
   Api.run 7777 "super-secret-code"
     ( runM
     . embedToMonadIO
-    . evalState mempty
-    . atomicStateToState
+    . runAtomicStateTVar worldTVar
     . logToIO Vomit
     )
