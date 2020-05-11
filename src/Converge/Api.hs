@@ -106,10 +106,6 @@ debugServer = onHealthCheck
 --------------------------------------------------------------------------------
 
 
-onHealthCheck :: Servant.Handler Text
-onHealthCheck = pure "All good"
-
-
 onPing :: Member Log r => Data.PingEvent -> Sem r ()
 onPing _event = log Debug "Pong!"
 
@@ -256,6 +252,10 @@ onUnknown :: Member Log r => Aeson.Value -> Sem r Servant.NoContent
 onUnknown value = do
   log Vomit ("Unknown request: " <> toText (Aeson.encodeToLazyText value))
   pure Servant.NoContent
+
+
+onHealthCheck :: Servant.Handler Text
+onHealthCheck = pure "All good"
 
 
 --------------------------------------------------------------------------------
