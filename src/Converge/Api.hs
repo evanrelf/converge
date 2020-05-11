@@ -16,7 +16,7 @@ module Converge.Api (run) where
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
 import Data.String.Interpolate (i)
-import Effect.Log (Log, Verbosity (..), log, runLogIO)
+import Effect.Log (Log, Verbosity (..), log, logToIO)
 import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
@@ -85,15 +85,15 @@ server = webhookServer :<|> debugServer
 
 webhookServer :: Servant.Server WebhookApi
 webhookServer =
-       webhookHandler (runM . runLogIO verbosity . onPing)
-  :<|> webhookHandler (runM . runLogIO verbosity . onPullRequest)
-  :<|> webhookHandler (runM . runLogIO verbosity . onPullRequestReview)
-  :<|> webhookHandler (runM . runLogIO verbosity . onIssue)
-  :<|> webhookHandler (runM . runLogIO verbosity . onIssueComment)
-  :<|> webhookHandler (runM . runLogIO verbosity . onPush)
-  :<|> webhookHandler (runM . runLogIO verbosity . onStatus)
-  :<|> webhookHandler (runM . runLogIO verbosity . onCheckSuite)
-  :<|> runM . runLogIO verbosity . onUnknown
+       webhookHandler (runM . logToIO verbosity . onPing)
+  :<|> webhookHandler (runM . logToIO verbosity . onPullRequest)
+  :<|> webhookHandler (runM . logToIO verbosity . onPullRequestReview)
+  :<|> webhookHandler (runM . logToIO verbosity . onIssue)
+  :<|> webhookHandler (runM . logToIO verbosity . onIssueComment)
+  :<|> webhookHandler (runM . logToIO verbosity . onPush)
+  :<|> webhookHandler (runM . logToIO verbosity . onStatus)
+  :<|> webhookHandler (runM . logToIO verbosity . onCheckSuite)
+  :<|> runM . logToIO verbosity . onUnknown
   where verbosity = Vomit
 
 

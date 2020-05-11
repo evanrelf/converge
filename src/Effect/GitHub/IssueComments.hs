@@ -13,7 +13,7 @@ module Effect.GitHub.IssueComments
   , createComment
   , deleteComment
   , editComment
-  , runIssueCommentsIO
+  , issueCommentsToIO
   )
 where
 
@@ -43,7 +43,7 @@ up
 up = fromEither <=< embed . liftIO
 
 
-runIssueCommentsIO
+issueCommentsToIO
   :: MonadIO m
   => Member (Embed m) r
   => G.Auth
@@ -51,7 +51,7 @@ runIssueCommentsIO
   -> G.Name G.Repo
   -> Sem (IssueComments ': r) a
   -> Sem r (Either G.Error a)
-runIssueCommentsIO auth owner repo
+issueCommentsToIO auth owner repo
   = runError
   . reinterpret \case
     Comment commentId -> up . github auth $

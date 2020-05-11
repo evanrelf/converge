@@ -16,7 +16,7 @@ module Effect.GitHub.PullRequests
   , pullRequestFiles
   , isPullRequestMerged
   , mergePullRequest
-  , runPullRequestsIO
+  , pullRequestsToIO
   )
 where
 
@@ -49,7 +49,7 @@ up
 up = fromEither <=< embed . liftIO
 
 
-runPullRequestsIO
+pullRequestsToIO
   :: MonadIO m
   => Member (Embed m) r
   => G.Auth
@@ -57,7 +57,7 @@ runPullRequestsIO
   -> G.Name G.Repo
   -> Sem (PullRequests ': r) a
   -> Sem r (Either G.Error a)
-runPullRequestsIO auth owner repo
+pullRequestsToIO auth owner repo
   = runError
   . reinterpret \case
     PullRequest issueNumber -> up . github auth $

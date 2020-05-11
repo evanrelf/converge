@@ -13,7 +13,7 @@ module Effect.GitHub.IssueLabels
   , replaceAllLabels
   , removeLabel
   , removeAllLabels
-  , runIssueLabelsIO
+  , issueLabelsToIO
   )
 where
 
@@ -43,7 +43,7 @@ up
 up = fromEither <=< embed . liftIO
 
 
-runIssueLabelsIO
+issueLabelsToIO
   :: MonadIO m
   => Member (Embed m) r
   => G.Auth
@@ -51,7 +51,7 @@ runIssueLabelsIO
   -> G.Name G.Repo
   -> Sem (IssueLabels ': r) a
   -> Sem r (Either G.Error a)
-runIssueLabelsIO auth owner repo
+issueLabelsToIO auth owner repo
   = runError
   . reinterpret \case
     Labels issueId fetchCount -> up . github auth $
