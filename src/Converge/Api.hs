@@ -35,7 +35,11 @@ run port secret = do
     (Servant.serveWithContext
       (Proxy @Api)
       (gitHubKey (pure secret) :. Servant.EmptyContext)
-      server)
+      (Servant.hoistServerWithContext
+        (Proxy @Api)
+        (Proxy @'[GitHubKey])
+        (runM . logToIO Vomit)
+        server))
 
 
 --------------------------------------------------------------------------------
@@ -79,25 +83,24 @@ type HealthCheck =
 --------------------------------------------------------------------------------
 
 
-server :: Servant.Server Api
+server :: Member Log r => Servant.ServerT Api (Sem r)
 server = webhookServer :<|> debugServer
 
 
-webhookServer :: Servant.Server WebhookApi
-webhookServer =
-       webhookHandler (runM . logToIO verbosity . onPing)
-  :<|> webhookHandler (runM . logToIO verbosity . onPullRequest)
-  :<|> webhookHandler (runM . logToIO verbosity . onPullRequestReview)
-  :<|> webhookHandler (runM . logToIO verbosity . onIssue)
-  :<|> webhookHandler (runM . logToIO verbosity . onIssueComment)
-  :<|> webhookHandler (runM . logToIO verbosity . onPush)
-  :<|> webhookHandler (runM . logToIO verbosity . onStatus)
-  :<|> webhookHandler (runM . logToIO verbosity . onCheckSuite)
-  :<|> runM . logToIO verbosity . onUnknown
-  where verbosity = Vomit
+webhookServer :: Member Log r => Servant.ServerT WebhookApi (Sem r)
+webhookServer
+     = webhookHandler onPing
+  :<|> webhookHandler onPullRequest
+  :<|> webhookHandler onPullRequestReview
+  :<|> webhookHandler onIssue
+  :<|> webhookHandler onIssueComment
+  :<|> webhookHandler onPush
+  :<|> webhookHandler onStatus
+  :<|> webhookHandler onCheckSuite
+  :<|> onUnknown
 
 
-debugServer :: Servant.Server DebugApi
+debugServer :: Servant.ServerT DebugApi (Sem r)
 debugServer = onHealthCheck
 
 
@@ -254,7 +257,7 @@ onUnknown value = do
   pure Servant.NoContent
 
 
-onHealthCheck :: Servant.Handler Text
+onHealthCheck :: Sem r Text
 onHealthCheck = pure "All good"
 
 
