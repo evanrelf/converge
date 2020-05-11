@@ -13,6 +13,7 @@
 
 module Converge.Api (run) where
 
+import Converge.State (World)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
 import Data.String.Interpolate (i)
@@ -22,7 +23,8 @@ import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
 import qualified Network.Wai.Handler.Warp as Warp
-import Polysemy (Member, Sem)
+import Polysemy (Member, Members, Sem)
+import Polysemy.AtomicState (AtomicState, atomicGet)
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as ServantGW
@@ -30,7 +32,7 @@ import qualified Servant.GitHub.Webhook as ServantGW
 
 run
   :: MonadIO m
-  => Member Log r
+  => Members '[AtomicState World, Log] r
   => Int
   -> ByteString
   -> (forall a. Sem r a -> Servant.Handler a)
@@ -80,13 +82,13 @@ type UnknownRequest =
 
 
 type HealthCheck =
-  "health"
+  "health-check"
     :> Servant.Summary "Health check"
     :> Servant.Get '[Servant.PlainText] Text
 
 
 type DumpState =
-  "debug"
+  "dump-state"
     :> Servant.Summary "Dump state"
     :> Servant.Get '[Servant.JSON] Aeson.Value
 
@@ -96,7 +98,7 @@ type DumpState =
 --------------------------------------------------------------------------------
 
 
-server :: Member Log r => Servant.ServerT Api (Sem r)
+server :: Members '[AtomicState World, Log] r => Servant.ServerT Api (Sem r)
 server = webhookServer :<|> debugServer
 
 
@@ -113,7 +115,9 @@ webhookServer
   :<|> onUnknown
 
 
-debugServer :: Servant.ServerT DebugApi (Sem r)
+debugServer
+  :: Members '[AtomicState World, Log] r
+  => Servant.ServerT DebugApi (Sem r)
 debugServer = onHealthCheck :<|> onDumpState
 
 
@@ -274,8 +278,10 @@ onHealthCheck :: Sem r Text
 onHealthCheck = pure "All good"
 
 
-onDumpState :: Sem r Aeson.Value
-onDumpState = pure Aeson.Null
+onDumpState :: Members '[AtomicState World, Log] r => Sem r Aeson.Value
+onDumpState = do
+  log Debug "Dumping state"
+  Aeson.toJSON <$> atomicGet
 
 
 --------------------------------------------------------------------------------
