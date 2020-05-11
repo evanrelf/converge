@@ -16,20 +16,26 @@ module Converge.Api (run) where
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson
 import Data.String.Interpolate (i)
-import Effect.Log (Log, Verbosity (..), log, logToIO)
+import Effect.Log (Log, Verbosity (..), log)
 import GHC.TypeLits (Symbol)
 import qualified GitHub.Data as Data
 import qualified GitHub.Data.Webhooks.Events as Events
 import qualified GitHub.Data.Webhooks.Payload as Payload
 import qualified Network.Wai.Handler.Warp as Warp
-import Polysemy (Member, Sem, runM)
+import Polysemy (Member, Sem)
 import Servant ((:<|>) (..), (:>), Context ((:.)))
 import qualified Servant
 import qualified Servant.GitHub.Webhook as ServantGW
 
 
-run :: MonadIO m => Int -> ByteString -> m ()
-run port secret = liftIO do
+run
+  :: MonadIO m
+  => Member Log r
+  => Int
+  -> ByteString
+  -> (forall a. Sem r a -> Servant.Handler a)
+  -> m ()
+run port secret interpreter = liftIO do
   putTextLn [i|Running at http://localhost:#{port}|]
   Warp.run port
     (Servant.serveWithContext
@@ -38,7 +44,7 @@ run port secret = liftIO do
       (Servant.hoistServerWithContext
         (Proxy @Api)
         (Proxy @'[GitHubKey])
-        (runM . logToIO Vomit)
+        interpreter
         server))
 
 
