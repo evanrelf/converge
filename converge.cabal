@@ -72,6 +72,7 @@ library
     Effect.GitHub.PullRequestReviews
     Effect.GitHub.PullRequests
     Effect.Log
+    Polysemy.AtomicState.Extra
     Polysemy.Input.Extra
     Polysemy.Output.Extra
   build-depends:
