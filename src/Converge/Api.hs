@@ -29,9 +29,9 @@ import qualified Servant.GitHub.Webhook as ServantGW
 
 
 run :: MonadIO m => Int -> ByteString -> m ()
-run port secret = do
+run port secret = liftIO do
   putTextLn [i|Running at http://localhost:#{port}|]
-  liftIO $ Warp.run port
+  Warp.run port
     (Servant.serveWithContext
       (Proxy @Api)
       (gitHubKey (pure secret) :. Servant.EmptyContext)
