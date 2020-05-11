@@ -63,7 +63,8 @@ type WebhookApi = Asum
   ]
 
 
-type DebugApi = HealthCheck
+type DebugApi =
+  "debug" :> (HealthCheck :<|> DumpState)
 
 
 type UnknownRequest =
@@ -76,6 +77,12 @@ type HealthCheck =
   "health"
     :> Servant.Summary "Health check"
     :> Servant.Get '[Servant.PlainText] Text
+
+
+type DumpState =
+  "debug"
+    :> Servant.Summary "Dump state"
+    :> Servant.Get '[Servant.JSON] Aeson.Value
 
 
 --------------------------------------------------------------------------------
@@ -101,7 +108,7 @@ webhookServer
 
 
 debugServer :: Servant.ServerT DebugApi (Sem r)
-debugServer = onHealthCheck
+debugServer = onHealthCheck :<|> onDumpState
 
 
 --------------------------------------------------------------------------------
@@ -259,6 +266,10 @@ onUnknown value = do
 
 onHealthCheck :: Sem r Text
 onHealthCheck = pure "All good"
+
+
+onDumpState :: Sem r Aeson.Value
+onDumpState = pure Aeson.Null
 
 
 --------------------------------------------------------------------------------
