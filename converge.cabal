@@ -87,6 +87,7 @@ library
     , polysemy
     , servant-github-webhook
     , servant-server
+    , stm
     , string-interpolate
     , text
     , time
