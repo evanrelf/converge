@@ -65,6 +65,7 @@ library
   exposed-modules:
     Converge
     Converge.Api
+    Converge.State
     Effect.GitHub.IssueComments
     Effect.GitHub.IssueLabels
     Effect.GitHub.PullRequestComments
