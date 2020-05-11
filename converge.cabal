@@ -25,6 +25,7 @@ common common
     DeriveFunctor
     DeriveGeneric
     DerivingStrategies
+    DerivingVia
     GeneralizedNewtypeDeriving
     LambdaCase
     OverloadedStrings
