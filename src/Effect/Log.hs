@@ -44,12 +44,11 @@ makeSem ''Log
 
 
 logToIO
-  :: MonadIO m
-  => Member (Embed m) r
+  :: Member (Embed IO) r
   => Verbosity
   -> Sem (Log ': r) a
   -> Sem r a
 logToIO verbosity = interpret \case
   Log messageVerbosity message -> embed do
     when (messageVerbosity >= verbosity)
-      (liftIO (Text.hPutStrLn stderr (printVerbosity messageVerbosity <> " " <> message)))
+      (Text.hPutStrLn stderr (printVerbosity messageVerbosity <> " " <> message))
