@@ -33,16 +33,14 @@ makeSem ''PullRequestReviews
 
 
 up
-  :: MonadIO m
-  => Members '[Error e, Embed m] r
+  :: Members '[Error e, Embed IO] r
   => IO (Either e a)
   -> Sem r a
-up = fromEither <=< embed . liftIO
+up = fromEither <=< embed
 
 
 pullRequestReviewsToIO
-  :: MonadIO m
-  => Member (Embed m) r
+  :: Member (Embed IO) r
   => G.Auth
   -> G.Name G.Owner
   -> G.Name G.Repo
