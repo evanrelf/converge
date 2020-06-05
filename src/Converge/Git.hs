@@ -4,6 +4,7 @@ module Converge.Git
   ( Repo
   , clone
   , withRepo
+  , withRepoDisposable
   , git
   , git_
   )
@@ -25,7 +26,7 @@ data Repo = Repo
 clone :: MonadIO m => Text -> m Repo
 clone repo = liftIO do
   parent <- Temp.getCanonicalTemporaryDirectory
-  path <- Temp.createTempDirectory parent "clone"
+  path <- Temp.createTempDirectory parent "repo"
   git_ ["clone", repo, toText path]
   lock <- newMVar ()
   pure Repo{path, lock}
@@ -34,6 +35,15 @@ clone repo = liftIO do
 withRepo :: Repo -> IO a -> IO a
 withRepo Repo{path, lock} action =
   withMVar lock \_ -> Directory.withCurrentDirectory path action
+
+
+withRepoDisposable :: Repo -> IO a -> IO a
+withRepoDisposable Repo{path, lock} action =
+  withMVar lock \_ -> do
+    parent <- Temp.getCanonicalTemporaryDirectory
+    disposablePath <- Temp.createTempDirectory parent "repo-disposable"
+    git_ ["clone", toText path, toText disposablePath]
+    Directory.withCurrentDirectory disposablePath action
 
 
 git :: MonadIO m => [Text] -> m (ExitCode, Text, Text)
