@@ -66,6 +66,7 @@ library
   exposed-modules:
     Converge
     Converge.Api
+    Converge.Git
     Converge.State
     Effect.GitHub.IssueComments
     Effect.GitHub.IssueLabels
@@ -85,6 +86,7 @@ library
     , github-webhooks        ^>= 0.13.0
     , optics                 ^>= 0.2
     , polysemy               ^>= 1.3.0
+    , process                ^>= 1.6.5
     , servant-github-webhook ^>= 0.4.2
     , servant-server         ^>= 0.16.2
     , stm                    ^>= 2.5.0
