@@ -3,11 +3,14 @@
 module Converge.Git
   ( Repo
   , clone
+  , withRepo
   , git
   , git_
   )
 where
 
+import Control.Concurrent.MVar (withMVar)
+import qualified System.Directory as Directory
 import System.Exit (ExitCode)
 import qualified System.IO.Temp as Temp
 import qualified System.Process as Process
@@ -26,6 +29,11 @@ clone repo = liftIO do
   git_ ["clone", repo, toText path]
   lock <- newMVar ()
   pure Repo{path, lock}
+
+
+withRepo :: Repo -> IO a -> IO a
+withRepo Repo{path, lock} action =
+  withMVar lock \_ -> Directory.withCurrentDirectory path action
 
 
 git :: MonadIO m => [Text] -> m (ExitCode, Text, Text)
