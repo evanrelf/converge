@@ -1,8 +1,6 @@
-{ callCabal2nix, ... }:
+{ callCabal2nix, pkgs, ... }:
 
 let
-  pkgs = import ../nixpkgs.nix { config = {}; };
-
   src =
     pkgs.nix-gitignore.gitignoreSource [
       ".git/"
