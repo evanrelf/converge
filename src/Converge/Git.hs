@@ -13,7 +13,10 @@ import qualified System.IO.Temp as Temp
 import qualified System.Process as Process
 
 
-newtype Repo = Repo { path :: FilePath }
+data Repo = Repo
+  { path :: FilePath
+  , lock :: MVar ()
+  }
 
 
 clone :: MonadIO m => Text -> m Repo
@@ -21,7 +24,8 @@ clone repo = liftIO do
   parent <- Temp.getCanonicalTemporaryDirectory
   path <- Temp.createTempDirectory parent "clone"
   git_ ["clone", repo, toText path]
-  pure Repo{path}
+  lock <- newMVar ()
+  pure Repo{path, lock}
 
 
 git :: MonadIO m => [Text] -> m (ExitCode, Text, Text)
