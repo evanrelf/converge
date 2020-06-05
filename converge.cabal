@@ -67,6 +67,7 @@ library
     Converge
     Converge.Api
     Converge.Git
+    Converge.Git.Internal
     Converge.State
     Effect.GitHub.IssueComments
     Effect.GitHub.IssueLabels
