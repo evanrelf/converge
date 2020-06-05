@@ -26,7 +26,7 @@ data Repo = Repo
 clone :: MonadIO m => Text -> m Repo
 clone repo = liftIO do
   parent <- Temp.getCanonicalTemporaryDirectory
-  path <- Temp.createTempDirectory parent "repo"
+  path <- Temp.createTempDirectory parent "converge-repo"
   git_ ["clone", repo, toText path]
   lock <- newMVar ()
   pure Repo{path, lock}
@@ -39,10 +39,8 @@ withRepo Repo{path, lock} action =
 
 withRepoDisposable :: Repo -> IO a -> IO a
 withRepoDisposable Repo{path, lock} action =
-  withMVar lock \_ -> do
-    parent <- Temp.getCanonicalTemporaryDirectory
-    disposablePath <- Temp.createTempDirectory parent "repo-disposable"
-    git_ ["clone", toText path, toText disposablePath]
+  Temp.withSystemTempDirectory "converge-repo-disposable" \disposablePath -> do
+    withMVar lock \_ -> git_ ["clone", toText path, toText disposablePath]
     Directory.withCurrentDirectory disposablePath action
 
 
