@@ -5,5 +5,6 @@ let
     url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
     sha256 = "1z1631v7q2c8mavy7xnvfx0wz34zd49jqmjg66nk0qgsi605m3qp";
   };
+
 in
   import nixpkgs
