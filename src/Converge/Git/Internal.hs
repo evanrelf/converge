@@ -24,13 +24,13 @@ clone repo = liftIO do
   pure Repo{path, lock}
 
 
-withRepo :: Repo -> IO a -> IO a
-withRepo Repo{path, lock} action =
+withRepo :: MonadIO m => Repo -> IO a -> m a
+withRepo Repo{path, lock} action = liftIO do
   withMVar lock \_ -> Directory.withCurrentDirectory path action
 
 
-withRepoDisposable :: Repo -> IO a -> IO a
-withRepoDisposable Repo{path, lock} action =
+withRepoDisposable :: MonadIO m => Repo -> IO a -> m a
+withRepoDisposable Repo{path, lock} action = liftIO do
   Temp.withSystemTempDirectory "converge-repo-disposable" \disposablePath -> do
     withMVar lock \_ -> git_ ["clone", toText path, toText disposablePath]
     Directory.withCurrentDirectory disposablePath action
