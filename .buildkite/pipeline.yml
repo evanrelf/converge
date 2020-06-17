@@ -1,4 +1,4 @@
 steps:
   - label: "nix-build"
     command: |
-      nix-build --no-out-link --keep-going --show-trace
+      nix-build release.nix --no-out-link --keep-going --show-trace
