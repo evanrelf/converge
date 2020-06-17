@@ -1,8 +1,8 @@
-{ callCabal2nix, pkgs, ... }:
+{ callCabal2nix, nix-gitignore, ... }:
 
 let
   src =
-    pkgs.nix-gitignore.gitignoreSource [
+    nix-gitignore.gitignoreSource [
       ".git/"
       "/nix/"
       "/*.nix"
