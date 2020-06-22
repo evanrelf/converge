@@ -5,7 +5,6 @@ let
   pkgs =
     import ./nix/nixpkgs.nix {
       overlays = [ haskellPackagesOverlay ];
-      config = {};
     };
 
 
@@ -24,7 +23,6 @@ let
         import ./nix/nixpkgs.nix {
           system = "x86_64-linux";
           overlays = [ haskellPackagesOverlay ];
-          config = {};
         };
     in
       linuxPkgs.dockerTools.buildImage {

@@ -1,3 +1,5 @@
+args:
+
 let
   # nixos-20.03 on 2020-03-23
   rev = "b2935fbeceaea0b64df4401545d7c8ea29102120";
@@ -7,4 +9,4 @@ let
   };
 
 in
-  import nixpkgs
+  import nixpkgs ({ config = {}; } // args)
