@@ -14,7 +14,6 @@ let
       };
       overrides = {
         "relude" = oldCabal: {
-          doCheck = false;
           patches = (oldCabal.patches or []) ++ [ ./nix/patches/relude.patch ];
         };
         "servant-github-webhook" = oldCabal: {
